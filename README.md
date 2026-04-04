@@ -6,7 +6,7 @@
 
 - 仅保留 `Project`、`Application` 的 HTTP、service、model、store 和配置加载
 - `Application` 允许维护 `active_manifest` 关系
-- 不提供 `Manifest`、`Job`、`Intent`、`Configuration`、`Verify` 对外资源
+- 不提供 `Manifest`、`Release`、`Intent`、`Configuration`、`Verify` 对外资源
 - 启动、路由中间件、分页、响应和观测基础设施来自 `../devflow-service-common`
 
 仓库文档：

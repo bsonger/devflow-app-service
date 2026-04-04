@@ -4,7 +4,7 @@
 
 - This repository is `devflow-app-service`.
 - Public surface is `Project` and `Application` only.
-- Do not reintroduce `Manifest`, `Job`, `Intent`, `Configuration`, or `Verify` routes, models, router modules, or runtime/bootstrap logic.
+- Do not reintroduce `Manifest`, `Release`, `Intent`, `Configuration`, or `Verify` routes, models, router modules, or runtime/bootstrap logic.
 - `Application` may keep `active_manifest` writeback semantics, but only as part of the application boundary.
 
 ## Structure
