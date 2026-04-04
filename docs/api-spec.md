@@ -1,9 +1,12 @@
-# 接口规范
+# API Spec
 
-`devflow-app-service` 的对外 HTTP 接口只围绕 `Project` 和 `Application`。
+## Purpose
 
-## Project
+`devflow-app-service` only exposes public HTTP APIs for `Project` and `Application`.
 
+## Endpoint Groups
+
+### `Project`
 - `POST /api/v1/projects`
 - `GET /api/v1/projects`
 - `GET /api/v1/projects/{id}`
@@ -11,8 +14,7 @@
 - `DELETE /api/v1/projects/{id}`
 - `GET /api/v1/projects/{id}/applications`
 
-## Application
-
+### `Application`
 - `POST /api/v1/applications`
 - `GET /api/v1/applications`
 - `GET /api/v1/applications/{id}`
@@ -20,15 +22,30 @@
 - `DELETE /api/v1/applications/{id}`
 - `PATCH /api/v1/applications/{id}/active_manifest`
 
-## 语义约定
+## Request Rules
 
-- 所有列表接口默认支持分页参数，返回值与 Swagger 保持一致
-- `active_manifest` 只表示当前应用绑定的活动版本，不承载构建或发布编排语义
-- 404 表示资源不存在，400 表示请求参数非法，409 表示状态或边界冲突
-- 删除语义以逻辑删除为主，查询接口需要遵守仓库中的软删除约定
+- all list endpoints support pagination parameters consistent with Swagger
+- `PATCH /api/v1/applications/{id}/active_manifest` requires `manifest_id`
+- `active_manifest` only represents the currently bound manifest, not build/release orchestration state
 
-## 不提供
+## Response Rules
 
+- list endpoints follow the common pagination shape used in this repo
+- `404` means the resource does not exist
+- `400` means invalid request input or invalid reference
+- `409` is reserved for state or boundary conflicts
+- delete behavior is soft-delete oriented
+
+## Error Rules
+
+- invalid ObjectID or malformed request body -> `400`
+- resource not found -> `404`
+- state/reference conflict -> `409`
+- internal/storage error -> `500`
+
+## Non-Goals
+
+This repo does not expose public CRUD for:
 - `Manifest`
 - `Release`
 - `Intent`
