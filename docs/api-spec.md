@@ -30,7 +30,7 @@
 ## 不提供
 
 - `Manifest`
-- `Job`
+- `Release`
 - `Intent`
 - `Configuration`
 - `Verify`

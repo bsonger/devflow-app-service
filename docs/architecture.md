@@ -32,7 +32,7 @@ flowchart LR
 ## 不负责的内容
 
 - `Manifest`
-- `Job`
+- `Release`
 - `Intent`
 - `Configuration`
 - `Verify`

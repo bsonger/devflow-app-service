@@ -10,7 +10,7 @@
 
 ## 不再保留的历史说明
 
-- 不再维护 `Configuration`、`Manifest`、`Job`、`Intent`、`Verify` 的仓库级职责说明
+- 不再维护 `Configuration`、`Manifest`、`Release`、`Intent`、`Verify` 的仓库级职责说明
 - 不再描述 monorepo 拆分阶段的导出策略
 
 ## 相关文档

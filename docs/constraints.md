@@ -8,7 +8,7 @@
 
 ## 边界约束
 
-- 不允许在 app-service 中引入 `Manifest`、`Job`、`Intent`、`Configuration`、`Verify` 对外资源
+- 不允许在 app-service 中引入 `Manifest`、`Release`、`Intent`、`Configuration`、`Verify` 对外资源
 - 不允许把执行面状态写回职责放进 app-service
 - 不允许把其他服务的领域模型复制回 app-service
 

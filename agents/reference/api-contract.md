@@ -12,7 +12,7 @@
 
 - `Configuration`
 - `Manifest`
-- `Job`
+- `Release`
 - `Intent`
 - `Verify`
 
