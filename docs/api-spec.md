@@ -43,11 +43,6 @@
 - state/reference conflict -> `409`
 - internal/storage error -> `500`
 
-## Non-Goals
+## Boundary Note
 
-This repo does not expose public CRUD for:
-- `Manifest`
-- `Release`
-- `Intent`
-- `Configuration`
-- `Verify`
+For repo scope and non-goals, see `docs/architecture.md`.
