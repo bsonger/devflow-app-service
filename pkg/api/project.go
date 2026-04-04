@@ -6,6 +6,7 @@ import (
 
 	"github.com/bsonger/devflow-app-service/pkg/model"
 	"github.com/bsonger/devflow-app-service/pkg/service"
+	"github.com/bsonger/devflow-service-common/httpx"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -26,7 +27,7 @@ func NewProjectHandler() *ProjectHandler {
 // @Accept json
 // @Produce json
 // @Param data body model.Project true "Project Data"
-// @Success 200 {object} CreateResponse
+// @Success 200 {object} httpx.CreateResponse
 // @Router /api/v1/projects [post]
 func (h *ProjectHandler) Create(c *gin.Context) {
 	var project *model.Project
@@ -44,7 +45,7 @@ func (h *ProjectHandler) Create(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, newCreateResponse(id, nil))
+	c.JSON(http.StatusOK, httpx.NewCreateResponse(id, nil))
 }
 
 // Get
@@ -128,7 +129,7 @@ func (h *ProjectHandler) Delete(c *gin.Context) {
 // @Router /api/v1/projects [get]
 func (h *ProjectHandler) List(c *gin.Context) {
 	filter := primitive.M{}
-	if !includeDeleted(c) {
+	if !httpx.IncludeDeleted(c) {
 		filter["deleted_at"] = primitive.M{"$exists": false}
 	}
 	if name := c.Query("name"); name != "" {
@@ -153,15 +154,15 @@ func (h *ProjectHandler) List(c *gin.Context) {
 		return
 	}
 
-	paging, err := parsePagination(c)
+	paging, err := httpx.ParsePagination(c)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	total := len(projects)
-	projects = paginateSlice(projects, paging)
-	setPaginationHeaders(c, total, paging)
+	projects = httpx.PaginateSlice(projects, paging)
+	httpx.SetPaginationHeaders(c, total, paging)
 
 	c.JSON(http.StatusOK, projects)
 }
@@ -190,15 +191,15 @@ func (h *ProjectHandler) ListApplications(c *gin.Context) {
 		return
 	}
 
-	paging, err := parsePagination(c)
+	paging, err := httpx.ParsePagination(c)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	total := len(applications)
-	applications = paginateSlice(applications, paging)
-	setPaginationHeaders(c, total, paging)
+	applications = httpx.PaginateSlice(applications, paging)
+	httpx.SetPaginationHeaders(c, total, paging)
 
 	c.JSON(http.StatusOK, applications)
 }

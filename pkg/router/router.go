@@ -2,7 +2,7 @@ package router
 
 import (
 	_ "github.com/bsonger/devflow-app-service/docs" // swagger docs 自动生成
-	"github.com/bsonger/devflow-app-service/pkg/telemetry"
+	"github.com/bsonger/devflow-service-common/routercore"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
@@ -15,34 +15,24 @@ import (
 type Module string
 
 const (
-	ModuleProject       Module = "project"
-	ModuleApplication   Module = "application"
-	ModuleManifest      Module = "manifest"
-	ModuleJob           Module = "job"
-	ModuleIntent        Module = "intent"
-	ModuleConfiguration Module = "configuration"
-	ModuleVerify        Module = "verify"
+	ModuleProject     Module = "project"
+	ModuleApplication Module = "application"
 )
 
 type Options struct {
-	ServiceName                 string
-	EnableSwagger               bool
-	IncludeNestedManifestRoutes bool
-	Modules                     []Module
+	ServiceName   string
+	EnableSwagger bool
+	Modules       []Module
 }
 
 // NewRouter creates the main Gin router.
 func NewRouter() *gin.Engine {
 	return NewRouterWithOptions(Options{
-		ServiceName:                 "devflow",
-		EnableSwagger:               true,
-		IncludeNestedManifestRoutes: true,
+		ServiceName:   "devflow",
+		EnableSwagger: true,
 		Modules: []Module{
 			ModuleProject,
 			ModuleApplication,
-			ModuleManifest,
-			ModuleJob,
-			ModuleIntent,
 		},
 	})
 }
@@ -50,22 +40,17 @@ func NewRouter() *gin.Engine {
 func NewRouterWithOptions(opts Options) *gin.Engine {
 	gin.SetMode(gin.ReleaseMode)
 
-	r := gin.New() // ⭐ 不使用 gin.Default()
-
-	var myFilter otelgin.Filter = func(req *http.Request) bool {
-		path := req.URL.Path
-		return !shouldIgnore(path)
-	}
+	r := gin.New()
 
 	r.Use(
-		otelgin.Middleware(serviceName(opts), otelgin.WithFilter(myFilter)),
-		LoggerMiddleware(),
-		GinZapRecovery(),
-		PyroscopeMiddleware(),
-		GinMetricsMiddleware(),
-		GinZapLogger(),
+		otelgin.Middleware(serviceName(opts), otelgin.WithFilter(routercore.OtelFilter)),
+		routercore.LoggerMiddleware(),
+		routercore.GinZapRecovery(),
+		routercore.PyroscopeMiddleware(),
+		routercore.GinMetricsMiddleware(),
+		routercore.GinZapLogger(),
 		cors.New(cors.Config{
-			AllowOrigins:     []string{"*"}, // 允许所有来源
+			AllowOrigins:     []string{"*"},
 			AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"},
 			AllowHeaders:     []string{"*"},
 			ExposeHeaders:    []string{"Content-Length"},
@@ -118,25 +103,7 @@ func registerModules(api *gin.RouterGroup, opts Options) {
 		case ModuleProject:
 			RegisterProjectRoutes(api)
 		case ModuleApplication:
-			if opts.IncludeNestedManifestRoutes {
-				RegisterApplicationRoutes(api)
-			} else {
-				RegisterApplicationCoreRoutes(api)
-			}
-		case ModuleManifest:
-			RegisterManifestRoutes(api)
-		case ModuleJob:
-			RegisterJobRoutes(api)
-		case ModuleIntent:
-			RegisterIntentRoutes(api)
-		case ModuleConfiguration:
-			RegisterConfigurationRoutes(api)
-		case ModuleVerify:
-			RegisterVerifyRoutes(api)
+			RegisterApplicationRoutes(api)
 		}
 	}
-}
-
-func StartMetricsServer(addr string) {
-	telemetry.StartMetricsServer(addr)
 }

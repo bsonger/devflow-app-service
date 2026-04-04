@@ -23,6 +23,5 @@ func RegisterApplicationCoreRoutes(rg *gin.RouterGroup) {
 }
 
 func RegisterApplicationRoutes(rg *gin.RouterGroup) {
-	app := registerApplicationGroup(rg)
-	RegisterManifestRoutes(app)
+	RegisterApplicationCoreRoutes(rg)
 }

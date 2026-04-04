@@ -6,6 +6,7 @@ import (
 
 	"github.com/bsonger/devflow-app-service/pkg/model"
 	"github.com/bsonger/devflow-app-service/pkg/service"
+	"github.com/bsonger/devflow-service-common/httpx"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -31,7 +32,7 @@ type UpdateActiveManifestRequest struct {
 // @Accept json
 // @Produce json
 // @Param data body model.Application true "Application Data"
-// @Success 200 {object} CreateResponse
+// @Success 200 {object} httpx.CreateResponse
 // @Router /api/v1/applications [post]
 func (h *ApplicationHandler) Create(c *gin.Context) {
 	var app *model.Application
@@ -50,7 +51,7 @@ func (h *ApplicationHandler) Create(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, newCreateResponse(id, nil))
+	c.JSON(http.StatusOK, httpx.NewCreateResponse(id, nil))
 }
 
 // Get
@@ -179,7 +180,7 @@ func (h *ApplicationHandler) UpdateActiveManifest(c *gin.Context) {
 // @Router  /api/v1/applications [get]
 func (h *ApplicationHandler) List(c *gin.Context) {
 	filter := primitive.M{}
-	if !includeDeleted(c) {
+	if !httpx.IncludeDeleted(c) {
 		filter["deleted_at"] = primitive.M{"$exists": false}
 	}
 	if name := c.Query("name"); name != "" {
@@ -212,15 +213,15 @@ func (h *ApplicationHandler) List(c *gin.Context) {
 		return
 	}
 
-	paging, err := parsePagination(c)
+	paging, err := httpx.ParsePagination(c)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	total := len(apps)
-	apps = paginateSlice(apps, paging)
-	setPaginationHeaders(c, total, paging)
+	apps = httpx.PaginateSlice(apps, paging)
+	httpx.SetPaginationHeaders(c, total, paging)
 
 	c.JSON(http.StatusOK, apps)
 }
