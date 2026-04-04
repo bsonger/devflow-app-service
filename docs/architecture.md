@@ -1,49 +1,66 @@
-# 架构说明
+# Architecture
 
-`devflow-app-service` 是 Devflow 的应用元数据服务，只负责 `Project` 和 `Application`。
+## Purpose
 
-## 职责
+`devflow-app-service` is the metadata owner for `Project` and `Application`.
+It provides application identity, project/application relationships, and active-manifest binding metadata.
 
-- 提供 `Project` 的增删改查
-- 提供 `Application` 的增删改查
-- 维护 `Application.active_manifest` 关联
-- 通过 Mongo 持久化应用元数据
-- 提供统一的 HTTP 入口、健康检查和 Swagger 文档
+## Architecture Style
 
-## 依赖
+This repo uses a **layered metadata-service backend**:
 
-- HTTP 层：`Gin`
-- 启动与观测基础设施：`../devflow-service-common`
-- 数据层：Mongo
-
-## 请求链路
-
-```mermaid
-flowchart LR
-  Client[客户端] --> Router[pkg/router]
-  Router --> API[pkg/api/application.go]
-  Router --> API2[pkg/api/project.go]
-  API --> Service[pkg/service/application.go]
-  API2 --> Service2[pkg/service/project.go]
-  Service --> Mongo[(Mongo)]
-  Service2 --> Mongo
+```text
+router -> api -> service -> store
+                    \-> model
 ```
 
-## 不负责的内容
+Where:
+- `api` binds HTTP requests and maps status codes
+- `service` owns metadata rules and cross-resource checks
+- `store` persists repo-owned metadata in Mongo
+
+## Request Flow
+
+```text
+Client
+  -> router
+  -> project/application handler
+  -> project/application service
+  -> Mongo store
+  -> HTTP response
+```
+
+## Internal Package Layout
+
+- `cmd/main.go`
+  - process entrypoint only
+- `pkg/config`
+  - config loading
+  - runtime initialization
+- `pkg/router`
+  - route registration
+  - middleware wiring
+- `pkg/api`
+  - project/application handlers
+- `pkg/service`
+  - metadata behavior
+  - `active_manifest` binding rules
+- `pkg/store`
+  - Mongo access
+- `pkg/model`
+  - `Project` and `Application` models
+
+## External Dependencies
+
+- `Gin`
+- `MongoDB`
+- `devflow-service-common`
+
+## Non-Goals
 
 - `Manifest`
 - `Release`
 - `Intent`
 - `Configuration`
-- `Verify`
-- Tekton、Argo 这类执行面逻辑
-
-## 目录职责
-
-- `cmd/main.go`：进程入口
-- `pkg/config/`：配置加载与基础设施初始化
-- `pkg/router/`：路由注册
-- `pkg/api/`：HTTP handler
-- `pkg/service/`：应用业务逻辑
-- `pkg/model/`：应用相关模型
-- `docs/`：仓库级文档与 Swagger
+- verify ingress
+- Tekton / Argo / Kubernetes execution orchestration
