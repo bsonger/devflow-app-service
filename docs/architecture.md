@@ -78,3 +78,9 @@ Client
 - environment-variable ownership
 - verify ingress
 - Tekton / Argo / Kubernetes execution orchestration
+
+## Swagger generation
+
+- `Dockerfile` runs `swag init -g cmd/main.go --parseDependency -o docs/generated/swagger` before building.
+- Keep the generated bundle under `docs/generated/swagger`; rerun `scripts/regen-swagger.sh` when handlers change.
+- `scripts/build.sh` wraps regeneration plus `go build` for locals, and `scripts/export_service_repo.sh` always copies the generated folder.
