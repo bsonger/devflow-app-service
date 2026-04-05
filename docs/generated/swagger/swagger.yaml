@@ -1,0 +1,369 @@
+definitions:
+  api.UpdateActiveManifestRequest:
+    properties:
+      manifest_id:
+        type: string
+    required:
+    - manifest_id
+    type: object
+  httpx.CreateResponse:
+    properties:
+      execution_intent_id:
+        type: string
+      id:
+        type: string
+    type: object
+  model.Application:
+    properties:
+      active_manifest_id:
+        type: string
+      active_manifest_name:
+        type: string
+      config_maps:
+        items:
+          $ref: '#/definitions/model.ConfigMap'
+        type: array
+      created_at:
+        type: string
+      deleted_at:
+        type: string
+      envs:
+        additionalProperties:
+          items:
+            $ref: '#/definitions/model.EnvVar'
+          type: array
+        type: object
+      id:
+        type: string
+      internet:
+        $ref: '#/definitions/model.Internet'
+      name:
+        type: string
+      project_id:
+        type: string
+      project_name:
+        type: string
+      replica:
+        type: integer
+      repo_url:
+        type: string
+      service:
+        $ref: '#/definitions/model.Service'
+      status:
+        type: string
+      type:
+        $ref: '#/definitions/model.ReleaseType'
+      updated_at:
+        type: string
+    type: object
+  model.ConfigMap:
+    properties:
+      files_path:
+        additionalProperties:
+          type: string
+        type: object
+      mount_path:
+        type: string
+      name:
+        type: string
+    type: object
+  model.EnvVar:
+    properties:
+      name:
+        type: string
+      value:
+        type: string
+    type: object
+  model.Internet:
+    enum:
+    - internal
+    - external
+    type: string
+    x-enum-varnames:
+    - Internal
+    - External
+  model.Port:
+    properties:
+      name:
+        type: string
+      port:
+        type: integer
+      target_port:
+        type: integer
+    type: object
+  model.Project:
+    properties:
+      created_at:
+        type: string
+      deleted_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      key:
+        type: string
+      labels:
+        additionalProperties:
+          type: string
+        type: object
+      name:
+        type: string
+      namespace:
+        type: string
+      owner:
+        type: string
+      status:
+        $ref: '#/definitions/model.ProjectStatus'
+      updated_at:
+        type: string
+    type: object
+  model.ProjectStatus:
+    enum:
+    - active
+    - archived
+    type: string
+    x-enum-varnames:
+    - ProjectActive
+    - ProjectArchived
+  model.ReleaseType:
+    enum:
+    - normal
+    - canary
+    - blue-green
+    type: string
+    x-enum-varnames:
+    - Normal
+    - Canary
+    - BlueGreen
+  model.Service:
+    properties:
+      ports:
+        items:
+          $ref: '#/definitions/model.Port'
+        type: array
+    type: object
+info:
+  contact: {}
+paths:
+  /api/v1/applications:
+    get:
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.Application'
+            type: array
+      summary: 获取应用列表
+      tags:
+      - Application
+    post:
+      consumes:
+      - application/json
+      description: 创建一个新的应用
+      parameters:
+      - description: Application Data
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/model.Application'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/httpx.CreateResponse'
+      summary: 创建应用
+      tags:
+      - Application
+  /api/v1/applications/{id}:
+    delete:
+      parameters:
+      - description: Application ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: 删除应用
+      tags:
+      - Application
+    get:
+      parameters:
+      - description: Application ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Application'
+      summary: 获取应用
+      tags:
+      - Application
+    put:
+      parameters:
+      - description: Application ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Application Data
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/model.Application'
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: 更新应用
+      tags:
+      - Application
+  /api/v1/applications/{id}/active_manifest:
+    patch:
+      parameters:
+      - description: Application ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Active Manifest Data
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/api.UpdateActiveManifestRequest'
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: 更新应用的 Active Manifest
+      tags:
+      - Application
+  /api/v1/projects:
+    get:
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.Project'
+            type: array
+      summary: 获取项目列表
+      tags:
+      - Project
+    post:
+      consumes:
+      - application/json
+      description: 创建一个新的项目
+      parameters:
+      - description: Project Data
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/model.Project'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/httpx.CreateResponse'
+      summary: 创建项目
+      tags:
+      - Project
+  /api/v1/projects/{id}:
+    delete:
+      parameters:
+      - description: Project ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: 删除项目
+      tags:
+      - Project
+    get:
+      parameters:
+      - description: Project ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Project'
+      summary: 获取项目
+      tags:
+      - Project
+    put:
+      parameters:
+      - description: Project ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Project Data
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/model.Project'
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: 更新项目
+      tags:
+      - Project
+  /api/v1/projects/{id}/applications:
+    get:
+      parameters:
+      - description: Project ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.Application'
+            type: array
+      summary: 获取项目下的应用列表
+      tags:
+      - Project
+swagger: "2.0"
