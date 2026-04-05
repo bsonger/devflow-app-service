@@ -5,7 +5,7 @@
 - owner repo: `devflow-app-service`
 - authoritative model file: `pkg/model/application.go`
 - authoritative API doc: `docs/api-spec.md`
-- generated swagger: `docs/swagger.yaml` (transitional; still reflects legacy handler layer until API migration)
+- generated swagger: `docs/generated/swagger/swagger.yaml`
 
 ## Purpose
 

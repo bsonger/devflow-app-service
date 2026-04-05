@@ -5,7 +5,7 @@
 - owner repo: `devflow-app-service`
 - authoritative model file: `pkg/model/project.go`
 - authoritative API doc: `docs/api-spec.md`
-- swagger source: `docs/swagger.yaml`
+- swagger source: `docs/generated/swagger/swagger.yaml`
 
 ## Purpose
 
