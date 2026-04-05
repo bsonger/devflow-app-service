@@ -1,15 +1,14 @@
 package api
 
 import (
-	"errors"
 	"net/http"
 
 	"github.com/bsonger/devflow-app-service/pkg/model"
 	"github.com/bsonger/devflow-app-service/pkg/service"
 	"github.com/bsonger/devflow-service-common/httpx"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo"
 )
 
 var ProjectRouteApi = NewProjectHandler()
@@ -45,7 +44,7 @@ func (h *ProjectHandler) Create(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, httpx.NewCreateResponse(id, nil))
+	c.JSON(http.StatusOK, httpx.CreateResponse{ID: id.String()})
 }
 
 // Get
@@ -55,7 +54,7 @@ func (h *ProjectHandler) Create(c *gin.Context) {
 // @Success 200 {object} model.Project
 // @Router /api/v1/projects/{id} [get]
 func (h *ProjectHandler) Get(c *gin.Context) {
-	id, err := primitive.ObjectIDFromHex(c.Param("id"))
+	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
 		return
@@ -78,7 +77,7 @@ func (h *ProjectHandler) Get(c *gin.Context) {
 // @Success 200 {object} map[string]string
 // @Router /api/v1/projects/{id} [put]
 func (h *ProjectHandler) Update(c *gin.Context) {
-	id, err := primitive.ObjectIDFromHex(c.Param("id"))
+	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
 		return
@@ -108,7 +107,7 @@ func (h *ProjectHandler) Update(c *gin.Context) {
 // @Success 200 {object} map[string]string
 // @Router /api/v1/projects/{id} [delete]
 func (h *ProjectHandler) Delete(c *gin.Context) {
-	id, err := primitive.ObjectIDFromHex(c.Param("id"))
+	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
 		return
@@ -174,7 +173,7 @@ func (h *ProjectHandler) List(c *gin.Context) {
 // @Success 200 {array} model.Application
 // @Router /api/v1/projects/{id}/applications [get]
 func (h *ProjectHandler) ListApplications(c *gin.Context) {
-	id, err := primitive.ObjectIDFromHex(c.Param("id"))
+	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
 		return
@@ -182,12 +181,7 @@ func (h *ProjectHandler) ListApplications(c *gin.Context) {
 
 	applications, err := service.ProjectService.ListApplications(c.Request.Context(), id)
 	if err != nil {
-		switch {
-		case errors.Is(err, mongo.ErrNoDocuments):
-			c.JSON(http.StatusNotFound, gin.H{"error": "not found"})
-		default:
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 

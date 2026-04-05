@@ -8,8 +8,8 @@ import (
 	"github.com/bsonger/devflow-app-service/pkg/service"
 	"github.com/bsonger/devflow-service-common/httpx"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo"
 )
 
 var ApplicationRouteApi = NewApplicationHandler()
@@ -43,7 +43,7 @@ func (h *ApplicationHandler) Create(c *gin.Context) {
 	app.WithCreateDefault()
 	id, err := service.ApplicationService.Create(c.Request.Context(), app)
 	if err != nil {
-		if errors.Is(err, service.ErrProjectReferenceNotFound) || errors.Is(err, service.ErrProjectReferenceMismatch) {
+		if errors.Is(err, service.ErrProjectReferenceNotFound) {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
@@ -51,7 +51,7 @@ func (h *ApplicationHandler) Create(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, httpx.NewCreateResponse(id, nil))
+	c.JSON(http.StatusOK, httpx.CreateResponse{ID: id.String()})
 }
 
 // Get
@@ -61,7 +61,7 @@ func (h *ApplicationHandler) Create(c *gin.Context) {
 // @Success	200	{object}	model.Application
 // @Router		/api/v1/applications/{id} [get]
 func (h *ApplicationHandler) Get(c *gin.Context) {
-	id, err := primitive.ObjectIDFromHex(c.Param("id"))
+	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
 		return
@@ -84,7 +84,7 @@ func (h *ApplicationHandler) Get(c *gin.Context) {
 // @Success	200		{object}	map[string]string
 // @Router		/api/v1/applications/{id} [put]
 func (h *ApplicationHandler) Update(c *gin.Context) {
-	id, err := primitive.ObjectIDFromHex(c.Param("id"))
+	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
 		return
@@ -99,7 +99,7 @@ func (h *ApplicationHandler) Update(c *gin.Context) {
 	app.SetID(id)
 
 	if err := service.ApplicationService.Update(c.Request.Context(), &app); err != nil {
-		if errors.Is(err, service.ErrProjectReferenceNotFound) || errors.Is(err, service.ErrProjectReferenceMismatch) {
+		if errors.Is(err, service.ErrProjectReferenceNotFound) {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
@@ -117,7 +117,7 @@ func (h *ApplicationHandler) Update(c *gin.Context) {
 // @Success	200	{object}	map[string]string
 // @Router		/api/v1/applications/{id} [delete]
 func (h *ApplicationHandler) Delete(c *gin.Context) {
-	id, err := primitive.ObjectIDFromHex(c.Param("id"))
+	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
 		return
@@ -139,7 +139,7 @@ func (h *ApplicationHandler) Delete(c *gin.Context) {
 // @Success	200	{object}	map[string]string
 // @Router		/api/v1/applications/{id}/active_manifest [patch]
 func (h *ApplicationHandler) UpdateActiveManifest(c *gin.Context) {
-	appID, err := primitive.ObjectIDFromHex(c.Param("id"))
+	appID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
 		return
@@ -151,7 +151,7 @@ func (h *ApplicationHandler) UpdateActiveManifest(c *gin.Context) {
 		return
 	}
 
-	manifestID, err := primitive.ObjectIDFromHex(req.ManifestID)
+	manifestID, err := uuid.Parse(req.ManifestID)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid manifest_id"})
 		return
@@ -160,10 +160,6 @@ func (h *ApplicationHandler) UpdateActiveManifest(c *gin.Context) {
 	if err := service.ApplicationService.UpdateActiveManifest(c.Request.Context(), appID, manifestID); err != nil {
 		if errors.Is(err, service.ErrManifestNotForApplication) {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
-		}
-		if errors.Is(err, mongo.ErrNoDocuments) {
-			c.JSON(http.StatusNotFound, gin.H{"error": "not found"})
 			return
 		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -186,16 +182,18 @@ func (h *ApplicationHandler) List(c *gin.Context) {
 	if name := c.Query("name"); name != "" {
 		filter["name"] = name
 	}
-	if projectName := c.Query("project_name"); projectName != "" {
-		filter["project_name"] = projectName
-	}
 	if projectID := c.Query("project_id"); projectID != "" {
-		id, err := primitive.ObjectIDFromHex(projectID)
+		id, err := uuid.Parse(projectID)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid project_id"})
 			return
 		}
-		filter["project_id"] = id
+		projectOID, err := service.BridgeUUIDToObjectID(id)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid project_id"})
+			return
+		}
+		filter["project_id"] = projectOID
 	}
 	if status := c.Query("status"); status != "" {
 		filter["status"] = status
@@ -203,8 +201,11 @@ func (h *ApplicationHandler) List(c *gin.Context) {
 	if releaseType := c.Query("type"); releaseType != "" {
 		filter["type"] = releaseType
 	}
-	if repoURL := c.Query("repo_url"); repoURL != "" {
-		filter["repo_url"] = repoURL
+	if repoAddress := c.Query("repo_address"); repoAddress != "" {
+		filter["$or"] = []primitive.M{
+			{"repo_address": repoAddress},
+			{"repo_url": repoAddress},
+		}
 	}
 
 	apps, err := service.ApplicationService.List(c.Request.Context(), filter)
