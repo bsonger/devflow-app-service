@@ -2,10 +2,18 @@
 
 ## Boundary
 
-- This repository is `devflow-app-service`.
-- Public surface is `Project` and `Application` only.
-- Do not reintroduce `Manifest`, `Release`, `Intent`, `Configuration`, or `Verify` routes, models, router modules, or runtime/bootstrap logic.
-- `Application` may keep `active_manifest` writeback semantics, but only as part of the application boundary.
+Repo-local boundary summary:
+
+- this repository is `devflow-app-service`
+- public surface is `Project` and `Application`
+- `Application.active_manifest` writeback stays within the application boundary
+
+Authoritative boundary and resource semantics:
+
+- `devflow-control/docs/system/boundaries.md`
+- `devflow-control/docs/services/app-service.md`
+- `devflow-control/docs/resources/project.md`
+- `devflow-control/docs/resources/application.md`
 
 ## Structure
 
@@ -13,7 +21,7 @@
 - `pkg/api/` contains project and application handlers.
 - `pkg/service/` contains project and application CRUD logic.
 - `pkg/router/` contains app-only routes and middleware.
-- `pkg/config/` initializes config, observability, Mongo, and local store state.
+- `pkg/config/` initializes config, observability, PostgreSQL, and local store state.
 - `docs/` contains the repository-level architecture, API, constraints, observability, and harness docs.
 
 ## Required Rules
