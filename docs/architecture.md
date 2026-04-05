@@ -65,9 +65,8 @@ Client
 ## External Dependencies
 
 - `Gin`
-- PostgreSQL target persistence
+- PostgreSQL persistence
 - `devflow-service-common`
-- transitional Mongo-based handlers/stores still exist outside this model/schema slice
 
 ## Non-Goals
 

@@ -15,7 +15,7 @@
 
 | Field | Type | Required | Writable | Description |
 |---|---|---|---|---|
-| `id` | `ObjectID` | server-generated | no | 主键 |
+| `id` | `uuid.UUID` | server-generated | no | 主键 |
 | `created_at` | `time.Time` | server-generated | no | 创建时间 |
 | `updated_at` | `time.Time` | server-generated | no | 更新时间 |
 | `deleted_at` | `*time.Time` | optional | system-managed | 软删除时间 |
@@ -70,7 +70,7 @@
 ## Validation notes
 
 - 当前 handler 没有单独的字段级 required 校验
-- `id` 必须是合法 ObjectID 才能用于读取/更新/删除
+- `id` 必须是合法 UUID 才能用于读取/更新/删除
 - 软删除记录默认不会出现在列表里，除非显式包含 deleted 数据
 
 ## Source pointers

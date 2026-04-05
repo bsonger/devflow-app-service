@@ -65,6 +65,6 @@ It also owns the narrow `Application.active_manifest` binding endpoint.
 
 For repo scope and non-goals, see `docs/architecture.md`.
 
-## Transitional Note
+## Swagger Note
 
-Generated Swagger artifacts in this repo still reflect the legacy Mongo/ObjectID API handlers and must be regenerated after the API layer is migrated to the new relational contract.
+Generated Swagger artifacts must stay aligned with the current PostgreSQL-backed API contract. Regenerate them after route, request, or response changes.

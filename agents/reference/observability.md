@@ -9,7 +9,7 @@
 适用于：
 
 - 所有入站 HTTP 链路
-- 所有对 Mongo 以及其他外部系统的出站调用
+- 所有对 PostgreSQL 以及其他外部系统的出站调用
 - 所有异步 worker / controller / executor 路径
 
 不适用于：
@@ -39,13 +39,13 @@
   - `PUT /api/v1/applications/:id`
   - `DELETE /api/v1/applications/:id`
   - `PATCH /api/v1/applications/:id/active_manifest`
-  - 所有对 Mongo 和其他外部系统的出站调用
+  - 所有对 PostgreSQL 和其他外部系统的出站调用
 - span 名称必须稳定，业务 ID 放入 span attribute 而不是 span 名称
 - 错误必须记录为 span status 和 error event
 - 所有服务至少提供：
   - 入站请求数、耗时、错误数
   - 出站请求数、耗时、错误数
-  - Mongo 调用耗时和错误数
+  - PostgreSQL 调用耗时和错误数
 - 日志至少包含：
   - `ts`
   - `level`
