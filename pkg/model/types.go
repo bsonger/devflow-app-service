@@ -1,21 +1,15 @@
 package model
 
-type ReleaseType string
-type Internet string
+type ServiceExposure string
 
 const (
-	Normal    ReleaseType = "normal"
-	Canary    ReleaseType = "canary"
-	BlueGreen ReleaseType = "blue-green"
+	ExposureInternal ServiceExposure = "internal"
+	ExposureExternal ServiceExposure = "external"
 )
 
-const (
-	Internal Internet = "internal"
-	External Internet = "external"
-)
-
-type Port struct {
-	Name       string `json:"name"`
-	Port       int    `json:"port"`
-	TargetPort int    `json:"target_port"`
+type ServicePort struct {
+	Name        string `json:"name"`
+	ServicePort int    `json:"service_port"`
+	TargetPort  int    `json:"target_port"`
+	Protocol    string `json:"protocol"`
 }

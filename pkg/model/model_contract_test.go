@@ -10,7 +10,7 @@ import (
 func TestApplicationContract(t *testing.T) {
 	typ := reflect.TypeOf(Application{})
 
-	for _, field := range []string{"ProjectID", "Name", "RepoAddress", "ActiveManifestID", "Replica", "Type", "Status"} {
+	for _, field := range []string{"ProjectID", "Name", "RepoAddress", "ActiveManifestID", "Labels"} {
 		f, ok := typ.FieldByName(field)
 		if !ok {
 			t.Fatalf("Application missing field %s", field)
@@ -27,7 +27,7 @@ func TestApplicationContract(t *testing.T) {
 		}
 	}
 
-	for _, removed := range []string{"ProjectName", "ActiveManifestName", "ConfigMaps", "Service", "Internet", "Envs"} {
+	for _, removed := range []string{"ProjectName", "ActiveManifestName", "ConfigMaps", "Service", "Internet", "Envs", "Replica", "Type", "Status"} {
 		if _, ok := typ.FieldByName(removed); ok {
 			t.Fatalf("Application should not expose legacy field %s", removed)
 		}
@@ -36,13 +36,29 @@ func TestApplicationContract(t *testing.T) {
 
 func TestServiceResourceContract(t *testing.T) {
 	typ := reflect.TypeOf(ServiceResource{})
-	for _, field := range []string{"ApplicationID", "Name", "Internet", "Ports", "Status"} {
+	for _, field := range []string{"ApplicationID", "Name", "Exposure", "Ports", "Status"} {
 		f, ok := typ.FieldByName(field)
 		if !ok {
 			t.Fatalf("ServiceResource missing field %s", field)
 		}
 		if field == "ApplicationID" && f.Type != reflect.TypeOf(uuid.UUID{}) {
 			t.Fatalf("ServiceResource.ApplicationID type = %v, want uuid.UUID", f.Type)
+		}
+	}
+}
+
+func TestProjectContractAfterAudit(t *testing.T) {
+	typ := reflect.TypeOf(Project{})
+	if _, ok := typ.FieldByName("Status"); ok {
+		t.Fatal("Project should not expose Status")
+	}
+}
+
+func TestEnvironmentContract(t *testing.T) {
+	typ := reflect.TypeOf(Environment{})
+	for _, field := range []string{"Key", "Name", "Cluster", "Namespace", "Labels"} {
+		if _, ok := typ.FieldByName(field); !ok {
+			t.Fatalf("Environment missing field %s", field)
 		}
 	}
 }

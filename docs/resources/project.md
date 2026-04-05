@@ -30,18 +30,6 @@
 | `namespace` | `string` | optional | user | 命名空间；为空时默认等于 `name` |
 | `owner` | `string` | optional | user | 负责人 |
 | `labels` | `map[string]string` | optional | user | 扩展标签 |
-| `status` | `ProjectStatus` | system-defaulted | user/system | 状态；为空时默认 `active` |
-
-## Lifecycle / status fields
-
-- status field: `status`
-- valid values:
-  - `active`
-  - `archived`
-- defaults:
-  - create 时为空会被 `ApplyDefaults()` 设置为 `active`
-- delete behavior:
-  - 删除走软删除，并会把 `status` 设为 `archived`
 
 ## Create / update rules
 
@@ -56,16 +44,13 @@
   - `id`
   - `created_at`
   - `updated_at`
-  - `status` 默认值
   - `namespace` 默认值
 
 ### Update
 - mutable fields:
-  - `name`, `key`, `description`, `namespace`, `owner`, `labels`, `status`
+  - `name`, `key`, `description`, `namespace`, `owner`, `labels`
 - immutable/system-managed fields:
   - `id`, `created_at`, `deleted_at`
-- special behavior:
-  - 项目名变化时，会同步更新关联 `Application.project_name`
 
 ## Validation notes
 

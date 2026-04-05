@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"strings"
 	"time"
@@ -22,8 +23,6 @@ type ApplicationListFilter struct {
 	IncludeDeleted bool
 	Name           string
 	ProjectID      *uuid.UUID
-	Status         string
-	Type           string
 	RepoAddress    string
 }
 
@@ -40,12 +39,17 @@ func (s *applicationService) Create(ctx context.Context, app *model.Application)
 		log.Error("resolve project reference failed", zap.Error(err))
 		return uuid.Nil, err
 	}
+	labels, err := marshalLabels(app.Labels)
+	if err != nil {
+		log.Error("marshal application labels failed", zap.Error(err))
+		return uuid.Nil, err
+	}
 
-	_, err := store.DB().ExecContext(ctx, `
+	_, err = store.DB().ExecContext(ctx, `
 		insert into applications (
-			id, project_id, name, repo_address, active_manifest_id, replica, type, status, created_at, updated_at, deleted_at
-		) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
-	`, app.ID, nullableUUID(app.ProjectID), app.Name, app.RepoAddress, nullableUUIDPtr(app.ActiveManifestID), app.Replica, app.Type, app.Status, app.CreatedAt, app.UpdatedAt, app.DeletedAt)
+			id, project_id, name, repo_address, active_manifest_id, labels, created_at, updated_at, deleted_at
+		) values ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+	`, app.ID, nullableUUID(app.ProjectID), app.Name, app.RepoAddress, nullableUUIDPtr(app.ActiveManifestID), labels, app.CreatedAt, app.UpdatedAt, app.DeletedAt)
 	if err != nil {
 		log.Error("create application failed", zap.Error(err))
 		return uuid.Nil, err
@@ -62,7 +66,7 @@ func (s *applicationService) Get(ctx context.Context, id uuid.UUID) (*model.Appl
 	)
 
 	app, err := scanApplication(store.DB().QueryRowContext(ctx, `
-		select id, project_id, name, repo_address, active_manifest_id, replica, type, status, created_at, updated_at, deleted_at
+		select id, project_id, name, repo_address, active_manifest_id, labels, created_at, updated_at, deleted_at
 		from applications
 		where id = $1 and deleted_at is null
 	`, id))
@@ -95,12 +99,16 @@ func (s *applicationService) Update(ctx context.Context, app *model.Application)
 		log.Error("resolve project reference failed", zap.Error(err))
 		return err
 	}
+	labels, err := marshalLabels(app.Labels)
+	if err != nil {
+		return err
+	}
 
 	result, err := store.DB().ExecContext(ctx, `
 		update applications
-		set project_id=$2, name=$3, repo_address=$4, active_manifest_id=$5, replica=$6, type=$7, status=$8, updated_at=$9, deleted_at=$10
+		set project_id=$2, name=$3, repo_address=$4, active_manifest_id=$5, labels=$6, updated_at=$7, deleted_at=$8
 		where id = $1 and deleted_at is null
-	`, app.ID, nullableUUID(app.ProjectID), app.Name, app.RepoAddress, nullableUUIDPtr(app.ActiveManifestID), app.Replica, app.Type, app.Status, app.UpdatedAt, app.DeletedAt)
+	`, app.ID, nullableUUID(app.ProjectID), app.Name, app.RepoAddress, nullableUUIDPtr(app.ActiveManifestID), labels, app.UpdatedAt, app.DeletedAt)
 	if err != nil {
 		log.Error("update application failed", zap.Error(err))
 		return err
@@ -182,11 +190,11 @@ func (s *applicationService) List(ctx context.Context, filter ApplicationListFil
 	)
 
 	query := `
-		select id, project_id, name, repo_address, active_manifest_id, replica, type, status, created_at, updated_at, deleted_at
+		select id, project_id, name, repo_address, active_manifest_id, labels, created_at, updated_at, deleted_at
 		from applications
 	`
-	clauses := make([]string, 0, 6)
-	args := make([]any, 0, 6)
+	clauses := make([]string, 0, 4)
+	args := make([]any, 0, 4)
 
 	if !filter.IncludeDeleted {
 		clauses = append(clauses, "deleted_at is null")
@@ -198,14 +206,6 @@ func (s *applicationService) List(ctx context.Context, filter ApplicationListFil
 	if filter.ProjectID != nil {
 		args = append(args, *filter.ProjectID)
 		clauses = append(clauses, placeholderClause("project_id", len(args)))
-	}
-	if filter.Status != "" {
-		args = append(args, filter.Status)
-		clauses = append(clauses, placeholderClause("status", len(args)))
-	}
-	if filter.Type != "" {
-		args = append(args, filter.Type)
-		clauses = append(clauses, placeholderClause("type", len(args)))
 	}
 	if filter.RepoAddress != "" {
 		args = append(args, filter.RepoAddress)
@@ -260,7 +260,7 @@ func scanApplication(scanner interface {
 		app              model.Application
 		projectID        sql.NullString
 		activeManifestID sql.NullString
-		replica          sql.NullInt32
+		labelsBytes      []byte
 		deletedAt        sql.NullTime
 	)
 
@@ -270,9 +270,7 @@ func scanApplication(scanner interface {
 		&app.Name,
 		&app.RepoAddress,
 		&activeManifestID,
-		&replica,
-		&app.Type,
-		&app.Status,
+		&labelsBytes,
 		&app.CreatedAt,
 		&app.UpdatedAt,
 		&deletedAt,
@@ -294,12 +292,13 @@ func scanApplication(scanner interface {
 		}
 		app.ActiveManifestID = &parsed
 	}
-	if replica.Valid {
-		value := replica.Int32
-		app.Replica = &value
-	}
 	if deletedAt.Valid {
 		app.DeletedAt = &deletedAt.Time
+	}
+	if len(labelsBytes) > 0 {
+		if err := json.Unmarshal(labelsBytes, &app.Labels); err != nil {
+			return nil, err
+		}
 	}
 
 	return &app, nil

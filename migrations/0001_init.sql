@@ -6,7 +6,6 @@ CREATE TABLE IF NOT EXISTS projects (
   namespace TEXT NOT NULL,
   owner TEXT NOT NULL DEFAULT '',
   labels JSONB NOT NULL DEFAULT '{}'::jsonb,
-  status TEXT NOT NULL,
   created_at TIMESTAMPTZ NOT NULL,
   updated_at TIMESTAMPTZ NOT NULL,
   deleted_at TIMESTAMPTZ NULL
@@ -26,9 +25,7 @@ CREATE TABLE IF NOT EXISTS applications (
   name TEXT NOT NULL,
   repo_address TEXT NOT NULL,
   active_manifest_id UUID NULL,
-  replica INTEGER NULL,
-  type TEXT NOT NULL,
-  status TEXT NOT NULL,
+  labels JSONB NOT NULL DEFAULT '{}'::jsonb,
   created_at TIMESTAMPTZ NOT NULL,
   updated_at TIMESTAMPTZ NOT NULL,
   deleted_at TIMESTAMPTZ NULL
@@ -48,7 +45,7 @@ CREATE TABLE IF NOT EXISTS services (
   id UUID PRIMARY KEY,
   application_id UUID NOT NULL,
   name TEXT NOT NULL,
-  internet TEXT NOT NULL,
+  exposure TEXT NOT NULL,
   ports JSONB NOT NULL DEFAULT '[]'::jsonb,
   status TEXT NOT NULL DEFAULT 'active',
   created_at TIMESTAMPTZ NOT NULL,
@@ -62,3 +59,19 @@ CREATE UNIQUE INDEX IF NOT EXISTS uq_services_name_active
 
 CREATE INDEX IF NOT EXISTS idx_services_application_id
   ON services (application_id);
+
+CREATE TABLE IF NOT EXISTS environments (
+  id UUID PRIMARY KEY,
+  key TEXT NOT NULL,
+  name TEXT NOT NULL,
+  cluster TEXT NOT NULL,
+  namespace TEXT NOT NULL,
+  labels JSONB NOT NULL DEFAULT '{}'::jsonb,
+  created_at TIMESTAMPTZ NOT NULL,
+  updated_at TIMESTAMPTZ NOT NULL,
+  deleted_at TIMESTAMPTZ NULL
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS uq_environments_key_active
+  ON environments (key)
+  WHERE deleted_at IS NULL;

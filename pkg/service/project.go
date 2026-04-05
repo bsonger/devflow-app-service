@@ -23,7 +23,6 @@ type ProjectListFilter struct {
 	Key            string
 	Namespace      string
 	Owner          string
-	Status         string
 }
 
 type projectService struct{}
@@ -44,9 +43,9 @@ func (s *projectService) Create(ctx context.Context, project *model.Project) (uu
 
 	_, err = store.DB().ExecContext(ctx, `
 		insert into projects (
-			id, key, name, description, namespace, owner, labels, status, created_at, updated_at, deleted_at
-		) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
-	`, project.ID, project.Key, project.Name, project.Description, project.Namespace, project.Owner, labels, project.Status, project.CreatedAt, project.UpdatedAt, project.DeletedAt)
+			id, key, name, description, namespace, owner, labels, created_at, updated_at, deleted_at
+		) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+	`, project.ID, project.Key, project.Name, project.Description, project.Namespace, project.Owner, labels, project.CreatedAt, project.UpdatedAt, project.DeletedAt)
 	if err != nil {
 		log.Error("create project failed", zap.Error(err))
 		return uuid.Nil, err
@@ -63,7 +62,7 @@ func (s *projectService) Get(ctx context.Context, id uuid.UUID) (*model.Project,
 	)
 
 	project, err := scanProject(store.DB().QueryRowContext(ctx, `
-		select id, key, name, description, namespace, owner, labels, status, created_at, updated_at, deleted_at
+		select id, key, name, description, namespace, owner, labels, created_at, updated_at, deleted_at
 		from projects
 		where id = $1 and deleted_at is null
 	`, id))
@@ -100,9 +99,9 @@ func (s *projectService) Update(ctx context.Context, project *model.Project) err
 
 	result, err := store.DB().ExecContext(ctx, `
 		update projects
-		set key=$2, name=$3, description=$4, namespace=$5, owner=$6, labels=$7, status=$8, updated_at=$9, deleted_at=$10
+		set key=$2, name=$3, description=$4, namespace=$5, owner=$6, labels=$7, updated_at=$8, deleted_at=$9
 		where id = $1 and deleted_at is null
-	`, project.ID, project.Key, project.Name, project.Description, project.Namespace, project.Owner, labels, project.Status, project.UpdatedAt, project.DeletedAt)
+	`, project.ID, project.Key, project.Name, project.Description, project.Namespace, project.Owner, labels, project.UpdatedAt, project.DeletedAt)
 	if err != nil {
 		log.Error("update project failed", zap.Error(err))
 		return err
@@ -129,9 +128,9 @@ func (s *projectService) Delete(ctx context.Context, id uuid.UUID) error {
 	now := time.Now()
 	result, err := store.DB().ExecContext(ctx, `
 		update projects
-		set deleted_at=$2, updated_at=$2, status=$3
+		set deleted_at=$2, updated_at=$2
 		where id = $1 and deleted_at is null
-	`, id, now, model.ProjectArchived)
+	`, id, now)
 	if err != nil {
 		log.Error("delete project failed", zap.Error(err))
 		return err
@@ -156,11 +155,11 @@ func (s *projectService) List(ctx context.Context, filter ProjectListFilter) ([]
 	)
 
 	query := `
-		select id, key, name, description, namespace, owner, labels, status, created_at, updated_at, deleted_at
+		select id, key, name, description, namespace, owner, labels, created_at, updated_at, deleted_at
 		from projects
 	`
-	clauses := make([]string, 0, 6)
-	args := make([]any, 0, 6)
+	clauses := make([]string, 0, 5)
+	args := make([]any, 0, 5)
 
 	if !filter.IncludeDeleted {
 		clauses = append(clauses, "deleted_at is null")
@@ -180,10 +179,6 @@ func (s *projectService) List(ctx context.Context, filter ProjectListFilter) ([]
 	if filter.Owner != "" {
 		args = append(args, filter.Owner)
 		clauses = append(clauses, placeholderClause("owner", len(args)))
-	}
-	if filter.Status != "" {
-		args = append(args, filter.Status)
-		clauses = append(clauses, placeholderClause("status", len(args)))
 	}
 	if len(clauses) > 0 {
 		query += " where " + strings.Join(clauses, " and ")
@@ -238,7 +233,6 @@ func scanProject(scanner interface {
 		&project.Namespace,
 		&project.Owner,
 		&labelsBytes,
-		&project.Status,
 		&project.CreatedAt,
 		&project.UpdatedAt,
 		&deletedAt,

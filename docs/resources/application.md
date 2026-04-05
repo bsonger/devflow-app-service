@@ -29,25 +29,7 @@
 | `name` | `string` | required | user | 应用名 |
 | `repo_address` | `string` | required | user | 代码仓库地址 |
 | `active_manifest_id` | `*uuid.UUID` | optional | system/user | 当前绑定的 manifest ID |
-| `replica` | `*int32` | optional | user | 副本数 |
-| `type` | `ReleaseType` | required | user | 发布策略类型 |
-| `status` | `string` | optional | user/system | 应用状态 |
-
-## Nested types
-
-### `ReleaseType`
-- `normal`
-- `canary`
-- `blue-green`
-
-### `Internet`
-- `internal`
-- `external`
-
-### `Port`
-- `name: string`
-- `port: int`
-- `target_port: int`
+| `labels` | `map[string]string` | optional | user | 应用标签 |
 
 ## Related child resource: `ServiceResource`
 
@@ -57,8 +39,8 @@
 |---|---|---|
 | `application_id` | `uuid.UUID` | 所属应用 |
 | `name` | `string` | 服务资源名 |
-| `internet` | `Internet` | 内外网属性 |
-| `ports` | `[]Port` | 端口集合 |
+| `exposure` | `ServiceExposure` | 暴露方式 |
+| `ports` | `[]ServicePort` | 服务端口到 Pod 端口映射 |
 | `status` | `string` | 服务资源状态 |
 
 ## Active manifest binding
@@ -81,14 +63,14 @@
 
 ### Create
 - target relational contract:
-  - required: `project_id`, `name`, `repo_address`, `type`
+  - required: `project_id`, `name`, `repo_address`
   - `project_id` 必须引用存在的 `Project`
 - server-managed fields:
   - `id`, `created_at`, `updated_at`
 
 ### Update
 - mutable fields:
-  - `name`, `repo_address`, `active_manifest_id`, `replica`, `type`, `status`
+  - `name`, `repo_address`, `active_manifest_id`, `labels`
 - immutable/system-managed fields:
   - `id`, `created_at`, `deleted_at`
 - special update path:

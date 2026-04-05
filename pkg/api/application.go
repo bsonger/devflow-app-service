@@ -173,8 +173,6 @@ func (h *ApplicationHandler) List(c *gin.Context) {
 	filter := service.ApplicationListFilter{
 		IncludeDeleted: httpx.IncludeDeleted(c),
 		Name:           c.Query("name"),
-		Status:         c.Query("status"),
-		Type:           c.Query("type"),
 		RepoAddress:    c.Query("repo_address"),
 	}
 	if projectID := c.Query("project_id"); projectID != "" {

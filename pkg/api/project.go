@@ -132,7 +132,6 @@ func (h *ProjectHandler) List(c *gin.Context) {
 		Key:            c.Query("key"),
 		Namespace:      c.Query("namespace"),
 		Owner:          c.Query("owner"),
-		Status:         c.Query("status"),
 	}
 
 	projects, err := service.ProjectService.List(c.Request.Context(), filter)
