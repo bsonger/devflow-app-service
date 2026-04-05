@@ -8,7 +8,6 @@ import (
 	"github.com/bsonger/devflow-service-common/httpx"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 var ProjectRouteApi = NewProjectHandler()
@@ -127,24 +126,13 @@ func (h *ProjectHandler) Delete(c *gin.Context) {
 // @Success 200 {array} model.Project
 // @Router /api/v1/projects [get]
 func (h *ProjectHandler) List(c *gin.Context) {
-	filter := primitive.M{}
-	if !httpx.IncludeDeleted(c) {
-		filter["deleted_at"] = primitive.M{"$exists": false}
-	}
-	if name := c.Query("name"); name != "" {
-		filter["name"] = name
-	}
-	if key := c.Query("key"); key != "" {
-		filter["key"] = key
-	}
-	if namespace := c.Query("namespace"); namespace != "" {
-		filter["namespace"] = namespace
-	}
-	if owner := c.Query("owner"); owner != "" {
-		filter["owner"] = owner
-	}
-	if status := c.Query("status"); status != "" {
-		filter["status"] = status
+	filter := service.ProjectListFilter{
+		IncludeDeleted: httpx.IncludeDeleted(c),
+		Name:           c.Query("name"),
+		Key:            c.Query("key"),
+		Namespace:      c.Query("namespace"),
+		Owner:          c.Query("owner"),
+		Status:         c.Query("status"),
 	}
 
 	projects, err := service.ProjectService.List(c.Request.Context(), filter)

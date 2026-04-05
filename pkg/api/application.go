@@ -9,7 +9,6 @@ import (
 	"github.com/bsonger/devflow-service-common/httpx"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 var ApplicationRouteApi = NewApplicationHandler()
@@ -158,10 +157,6 @@ func (h *ApplicationHandler) UpdateActiveManifest(c *gin.Context) {
 	}
 
 	if err := service.ApplicationService.UpdateActiveManifest(c.Request.Context(), appID, manifestID); err != nil {
-		if errors.Is(err, service.ErrManifestNotForApplication) {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
-		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -175,12 +170,12 @@ func (h *ApplicationHandler) UpdateActiveManifest(c *gin.Context) {
 // @Success 200 {array} model.Application
 // @Router  /api/v1/applications [get]
 func (h *ApplicationHandler) List(c *gin.Context) {
-	filter := primitive.M{}
-	if !httpx.IncludeDeleted(c) {
-		filter["deleted_at"] = primitive.M{"$exists": false}
-	}
-	if name := c.Query("name"); name != "" {
-		filter["name"] = name
+	filter := service.ApplicationListFilter{
+		IncludeDeleted: httpx.IncludeDeleted(c),
+		Name:           c.Query("name"),
+		Status:         c.Query("status"),
+		Type:           c.Query("type"),
+		RepoAddress:    c.Query("repo_address"),
 	}
 	if projectID := c.Query("project_id"); projectID != "" {
 		id, err := uuid.Parse(projectID)
@@ -188,24 +183,7 @@ func (h *ApplicationHandler) List(c *gin.Context) {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid project_id"})
 			return
 		}
-		projectOID, err := service.BridgeUUIDToObjectID(id)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid project_id"})
-			return
-		}
-		filter["project_id"] = projectOID
-	}
-	if status := c.Query("status"); status != "" {
-		filter["status"] = status
-	}
-	if releaseType := c.Query("type"); releaseType != "" {
-		filter["type"] = releaseType
-	}
-	if repoAddress := c.Query("repo_address"); repoAddress != "" {
-		filter["$or"] = []primitive.M{
-			{"repo_address": repoAddress},
-			{"repo_url": repoAddress},
-		}
+		filter.ProjectID = &id
 	}
 
 	apps, err := service.ApplicationService.List(c.Request.Context(), filter)

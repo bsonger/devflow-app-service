@@ -2,19 +2,29 @@ package service
 
 import (
 	"context"
+	"database/sql"
+	"encoding/json"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/bsonger/devflow-app-service/pkg/model"
-	"github.com/bsonger/devflow-common/client/logging"
-	"github.com/bsonger/devflow-common/client/mongo"
+	"github.com/bsonger/devflow-app-service/pkg/store"
+	"github.com/bsonger/devflow-service-common/loggingx"
 	"github.com/google/uuid"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
-	mongoDriver "go.mongodb.org/mongo-driver/mongo"
 	"go.uber.org/zap"
 )
 
 var ProjectService = NewProjectService()
+
+type ProjectListFilter struct {
+	IncludeDeleted bool
+	Name           string
+	Key            string
+	Namespace      string
+	Owner          string
+	Status         string
+}
 
 type projectService struct{}
 
@@ -23,93 +33,87 @@ func NewProjectService() *projectService {
 }
 
 func (s *projectService) Create(ctx context.Context, project *model.Project) (uuid.UUID, error) {
-	log := logging.LoggerWithContext(ctx).With(
-		zap.String("operation", "create_project"),
-	)
+	log := loggingx.LoggerWithContext(ctx).With(zap.String("operation", "create_project"))
 
 	project.ApplyDefaults()
-	doc, err := projectToDoc(project)
+	labels, err := marshalLabels(project.Labels)
 	if err != nil {
-		log.Error("prepare project doc failed", zap.Error(err))
+		log.Error("marshal project labels failed", zap.Error(err))
 		return uuid.Nil, err
 	}
-	if err := mongo.Repo.Create(ctx, doc); err != nil {
+
+	_, err = store.DB().ExecContext(ctx, `
+		insert into projects (
+			id, key, name, description, namespace, owner, labels, status, created_at, updated_at, deleted_at
+		) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
+	`, project.ID, project.Key, project.Name, project.Description, project.Namespace, project.Owner, labels, project.Status, project.CreatedAt, project.UpdatedAt, project.DeletedAt)
+	if err != nil {
 		log.Error("create project failed", zap.Error(err))
 		return uuid.Nil, err
 	}
-	project.ID = bridgeObjectIDToUUID(doc.ID)
 
 	log.Info("project created", zap.String("project_id", project.GetID().String()), zap.String("project_key", project.Key))
 	return project.GetID(), nil
 }
 
 func (s *projectService) Get(ctx context.Context, id uuid.UUID) (*model.Project, error) {
-	oid, err := bridgeUUIDToObjectID(id)
-	if err != nil {
-		return nil, err
-	}
-	log := logging.LoggerWithContext(ctx).With(
+	log := loggingx.LoggerWithContext(ctx).With(
 		zap.String("operation", "get_project"),
 		zap.String("project_id", id.String()),
 	)
 
-	doc := &projectDoc{}
-	if err := mongo.Repo.FindByID(ctx, doc, oid); err != nil {
+	project, err := scanProject(store.DB().QueryRowContext(ctx, `
+		select id, key, name, description, namespace, owner, labels, status, created_at, updated_at, deleted_at
+		from projects
+		where id = $1 and deleted_at is null
+	`, id))
+	if err != nil {
 		log.Error("get project failed", zap.Error(err))
 		return nil, err
 	}
-	if doc.DeletedAt != nil {
-		log.Warn("project already deleted")
-		return nil, mongoDriver.ErrNoDocuments
-	}
 
-	project := projectFromDoc(doc)
 	log.Debug("project fetched", zap.String("project_key", project.Key))
-	return &project, nil
+	return project, nil
 }
 
 func (s *projectService) Update(ctx context.Context, project *model.Project) error {
-	log := logging.LoggerWithContext(ctx).With(
+	log := loggingx.LoggerWithContext(ctx).With(
 		zap.String("operation", "update_project"),
 		zap.String("project_id", project.GetID().String()),
 	)
-	projectOID, err := bridgeUUIDToObjectID(project.GetID())
-	if err != nil {
-		return err
-	}
 
-	currentDoc := &projectDoc{}
-	if err := mongo.Repo.FindByID(ctx, currentDoc, projectOID); err != nil {
+	current, err := s.Get(ctx, project.GetID())
+	if err != nil {
 		log.Error("load project failed", zap.Error(err))
 		return err
 	}
-	if currentDoc.DeletedAt != nil {
-		log.Warn("update skipped for deleted project")
-		return mongoDriver.ErrNoDocuments
-	}
 
-	current := projectFromDoc(currentDoc)
 	project.CreatedAt = current.CreatedAt
 	project.DeletedAt = current.DeletedAt
 	project.WithUpdateDefault()
 	project.ApplyDefaults()
 
-	doc, err := projectToDoc(project)
+	labels, err := marshalLabels(project.Labels)
 	if err != nil {
 		return err
 	}
-	doc.ID = projectOID
 
-	if err := mongo.Repo.Update(ctx, doc); err != nil {
+	result, err := store.DB().ExecContext(ctx, `
+		update projects
+		set key=$2, name=$3, description=$4, namespace=$5, owner=$6, labels=$7, status=$8, updated_at=$9, deleted_at=$10
+		where id = $1 and deleted_at is null
+	`, project.ID, project.Key, project.Name, project.Description, project.Namespace, project.Owner, labels, project.Status, project.UpdatedAt, project.DeletedAt)
+	if err != nil {
 		log.Error("update project failed", zap.Error(err))
 		return err
 	}
 
-	if current.Name != project.Name {
-		if err := s.syncApplicationProjectNames(ctx, project.GetID(), project.Name); err != nil {
-			log.Error("sync project name to applications failed", zap.Error(err))
-			return err
-		}
+	rows, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rows == 0 {
+		return sql.ErrNoRows
 	}
 
 	log.Info("project updated", zap.String("project_key", project.Key))
@@ -117,48 +121,92 @@ func (s *projectService) Update(ctx context.Context, project *model.Project) err
 }
 
 func (s *projectService) Delete(ctx context.Context, id uuid.UUID) error {
-	oid, err := bridgeUUIDToObjectID(id)
-	if err != nil {
-		return err
-	}
-	log := logging.LoggerWithContext(ctx).With(
+	log := loggingx.LoggerWithContext(ctx).With(
 		zap.String("operation", "delete_project"),
 		zap.String("project_id", id.String()),
 	)
 
 	now := time.Now()
-	update := primitive.M{
-		"$set": primitive.M{
-			"deleted_at": now,
-			"updated_at": now,
-			"status":     model.ProjectArchived,
-		},
-	}
-
-	if err := mongo.Repo.UpdateByID(ctx, &projectDoc{}, oid, update); err != nil {
+	result, err := store.DB().ExecContext(ctx, `
+		update projects
+		set deleted_at=$2, updated_at=$2, status=$3
+		where id = $1 and deleted_at is null
+	`, id, now, model.ProjectArchived)
+	if err != nil {
 		log.Error("delete project failed", zap.Error(err))
 		return err
+	}
+
+	rows, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rows == 0 {
+		return sql.ErrNoRows
 	}
 
 	log.Info("project deleted")
 	return nil
 }
 
-func (s *projectService) List(ctx context.Context, filter primitive.M) ([]model.Project, error) {
-	log := logging.LoggerWithContext(ctx).With(
+func (s *projectService) List(ctx context.Context, filter ProjectListFilter) ([]model.Project, error) {
+	log := loggingx.LoggerWithContext(ctx).With(
 		zap.String("operation", "list_projects"),
 		zap.Any("filter", filter),
 	)
 
-	var docs []projectDoc
-	if err := mongo.Repo.List(ctx, &projectDoc{}, filter, &docs); err != nil {
+	query := `
+		select id, key, name, description, namespace, owner, labels, status, created_at, updated_at, deleted_at
+		from projects
+	`
+	clauses := make([]string, 0, 6)
+	args := make([]any, 0, 6)
+
+	if !filter.IncludeDeleted {
+		clauses = append(clauses, "deleted_at is null")
+	}
+	if filter.Name != "" {
+		args = append(args, filter.Name)
+		clauses = append(clauses, placeholderClause("name", len(args)))
+	}
+	if filter.Key != "" {
+		args = append(args, filter.Key)
+		clauses = append(clauses, placeholderClause("key", len(args)))
+	}
+	if filter.Namespace != "" {
+		args = append(args, filter.Namespace)
+		clauses = append(clauses, placeholderClause("namespace", len(args)))
+	}
+	if filter.Owner != "" {
+		args = append(args, filter.Owner)
+		clauses = append(clauses, placeholderClause("owner", len(args)))
+	}
+	if filter.Status != "" {
+		args = append(args, filter.Status)
+		clauses = append(clauses, placeholderClause("status", len(args)))
+	}
+	if len(clauses) > 0 {
+		query += " where " + strings.Join(clauses, " and ")
+	}
+	query += " order by created_at desc"
+
+	rows, err := store.DB().QueryContext(ctx, query, args...)
+	if err != nil {
 		log.Error("list projects failed", zap.Error(err))
 		return nil, err
 	}
+	defer rows.Close()
 
-	projects := make([]model.Project, 0, len(docs))
-	for i := range docs {
-		projects = append(projects, projectFromDoc(&docs[i]))
+	projects := make([]model.Project, 0)
+	for rows.Next() {
+		project, err := scanProject(rows)
+		if err != nil {
+			return nil, err
+		}
+		projects = append(projects, *project)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 
 	log.Debug("projects listed", zap.Int("count", len(projects)))
@@ -169,28 +217,54 @@ func (s *projectService) ListApplications(ctx context.Context, projectID uuid.UU
 	if _, err := s.Get(ctx, projectID); err != nil {
 		return nil, err
 	}
-	projectOID, err := bridgeUUIDToObjectID(projectID)
-	if err != nil {
+
+	return ApplicationService.List(ctx, ApplicationListFilter{ProjectID: &projectID})
+}
+
+func scanProject(scanner interface {
+	Scan(dest ...any) error
+}) (*model.Project, error) {
+	var (
+		project     model.Project
+		labelsBytes []byte
+		deletedAt   sql.NullTime
+	)
+
+	if err := scanner.Scan(
+		&project.ID,
+		&project.Key,
+		&project.Name,
+		&project.Description,
+		&project.Namespace,
+		&project.Owner,
+		&labelsBytes,
+		&project.Status,
+		&project.CreatedAt,
+		&project.UpdatedAt,
+		&deletedAt,
+	); err != nil {
 		return nil, err
 	}
 
-	filter := primitive.M{
-		"deleted_at": primitive.M{"$exists": false},
-		"project_id": projectOID,
+	if deletedAt.Valid {
+		project.DeletedAt = &deletedAt.Time
+	}
+	if len(labelsBytes) > 0 {
+		if err := json.Unmarshal(labelsBytes, &project.Labels); err != nil {
+			return nil, err
+		}
 	}
 
-	return ApplicationService.List(ctx, filter)
+	return &project, nil
 }
 
-func (s *projectService) syncApplicationProjectNames(ctx context.Context, projectID uuid.UUID, projectName string) error {
-	projectOID, err := bridgeUUIDToObjectID(projectID)
-	if err != nil {
-		return err
+func marshalLabels(labels map[string]string) ([]byte, error) {
+	if labels == nil {
+		return []byte("{}"), nil
 	}
-	return mongo.Repo.UpdateMany(ctx, &applicationDoc{}, bson.M{"project_id": projectOID}, bson.M{
-		"$set": bson.M{
-			"project_name": projectName,
-			"updated_at":   time.Now(),
-		},
-	})
+	return json.Marshal(labels)
+}
+
+func placeholderClause(column string, position int) string {
+	return column + " = $" + strconv.Itoa(position)
 }
