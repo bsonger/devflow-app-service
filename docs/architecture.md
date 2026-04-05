@@ -2,8 +2,13 @@
 
 ## Purpose
 
-`devflow-app-service` is the metadata owner for `Project` and `Application`.
-It provides application identity, project/application relationships, and active-manifest binding metadata.
+`devflow-app-service` is the metadata owner for:
+
+- `Project`
+- `Application`
+- `ServiceResource`
+
+It provides project/application relationships, application repository identity, service-exposure metadata, and the narrow `active_manifest` binding.
 
 ## Architecture Style
 
@@ -17,16 +22,21 @@ router -> api -> service -> store
 Where:
 - `api` binds HTTP requests and maps status codes
 - `service` owns metadata rules and cross-resource checks
-- `store` persists repo-owned metadata in Mongo
+- `store` persists repo-owned metadata
+
+The converged target resource model is:
+
+- `Project` 1 -> N `Application`
+- `Application` 1 -> N `ServiceResource`
 
 ## Request Flow
 
 ```text
 Client
   -> router
-  -> project/application handler
-  -> project/application service
-  -> Mongo store
+  -> project/application/service-resource handler
+  -> metadata service logic
+  -> persistence store
   -> HTTP response
 ```
 
@@ -41,19 +51,19 @@ Client
   - route registration
   - middleware wiring
 - `pkg/api`
-  - project/application handlers
+  - project/application/service-resource handlers
 - `pkg/service`
   - metadata behavior
   - `active_manifest` binding rules
 - `pkg/store`
-  - Mongo access
+  - repo-owned metadata persistence
 - `pkg/model`
-  - `Project` and `Application` models
+  - `Project`, `Application`, `ServiceResource`
 
 ## External Dependencies
 
 - `Gin`
-- `MongoDB`
+- PostgreSQL target persistence
 - `devflow-service-common`
 
 ## Non-Goals
@@ -62,5 +72,6 @@ Client
 - `Release`
 - `Intent`
 - `Configuration`
+- environment-variable ownership
 - verify ingress
 - Tekton / Argo / Kubernetes execution orchestration
