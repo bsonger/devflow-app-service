@@ -8,15 +8,15 @@ const (
 )
 
 type Project struct {
-	BaseModel `bson:",inline"`
+	BaseModel
 
-	Name        string            `bson:"name" json:"name"`
-	Key         string            `bson:"key" json:"key"`
-	Description string            `bson:"description,omitempty" json:"description,omitempty"`
-	Namespace   string            `bson:"namespace,omitempty" json:"namespace,omitempty"`
-	Owner       string            `bson:"owner,omitempty" json:"owner,omitempty"`
-	Labels      map[string]string `bson:"labels,omitempty" json:"labels,omitempty"`
-	Status      ProjectStatus     `bson:"status" json:"status"`
+	Name        string            `json:"name" db:"name"`
+	Key         string            `json:"key" db:"key"`
+	Description string            `json:"description,omitempty" db:"description"`
+	Namespace   string            `json:"namespace,omitempty" db:"namespace"`
+	Owner       string            `json:"owner,omitempty" db:"owner"`
+	Labels      map[string]string `json:"labels,omitempty" db:"labels"`
+	Status      ProjectStatus     `json:"status" db:"status"`
 }
 
 func (p *Project) ApplyDefaults() {

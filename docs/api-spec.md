@@ -42,7 +42,9 @@ It also owns the narrow `Application.active_manifest` binding endpoint.
 - `active_manifest` only represents the currently bound manifest, not build/release orchestration state
 - `Application` owns stable app metadata such as `project_id`, `name`, `repo_address`, and release strategy type
 - `ServiceResource` is a child resource under `Application`; one application may own multiple service resources
+- `ServiceResource` owns traffic-exposure metadata such as `internet` and `ports`
 - app-service does not own environment variables
+- app-service does not own manifests, releases, configuration revisions, or verification records
 
 ## Response Rules
 
@@ -62,3 +64,7 @@ It also owns the narrow `Application.active_manifest` binding endpoint.
 ## Boundary Note
 
 For repo scope and non-goals, see `docs/architecture.md`.
+
+## Transitional Note
+
+Generated Swagger artifacts in this repo still reflect the legacy Mongo/ObjectID API handlers and must be regenerated after the API layer is migrated to the new relational contract.

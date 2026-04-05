@@ -28,6 +28,8 @@ The converged target resource model is:
 
 - `Project` 1 -> N `Application`
 - `Application` 1 -> N `ServiceResource`
+- `Application.repo_address` is the unified repository locator
+- `ServiceResource` stores `internet` and `ports`
 
 ## Request Flow
 
@@ -65,6 +67,7 @@ Client
 - `Gin`
 - PostgreSQL target persistence
 - `devflow-service-common`
+- transitional Mongo-based handlers/stores still exist outside this model/schema slice
 
 ## Non-Goals
 
@@ -72,6 +75,7 @@ Client
 - `Release`
 - `Intent`
 - `Configuration`
+- `ConfigurationRevision`
 - environment-variable ownership
 - verify ingress
 - Tekton / Argo / Kubernetes execution orchestration
