@@ -1,39 +1,38 @@
-# 观测规范
+# Observability
 
-## 总则
+## Shared Baseline
 
-本仓库要求 `metrics`、`log`、`trace`、`profile` 统一落地。
+This repo follows the shared telemetry contract implemented in `devflow-service-common`.
 
-## 必须记录的场景
+- structured logs with shared runtime fields
+- `devflow_http_*` ingress metrics
+- standard server/client spans with service-defined business attributes
+- optional diagnostics only for `pprof` and Pyroscope
 
-- 每个入站 HTTP 请求
-- 每个出站服务调用
-- 每个外部系统调用
+## Repo-Local Focus
 
-## HTTP 指标
+`devflow-app-service` should add resource context for:
 
-- 请求计数
-- 请求耗时
-- 错误计数
+- `project`
+- `application`
+- `active_manifest`
 
-## Trace 约定
+Recommended structured fields:
 
-- 入站请求必须有 server span
-- 出站调用必须有 client span
-- span attribute 中可包含资源 ID、状态和目标服务名
+- `resource`
+- `resource_id`
+- `project_id`
+- `application_id`
+- `result`
+- `error_code`
 
-## 日志约定
+## Metrics Notes
 
-- 必须是结构化日志
-- 至少包含 `service`、`trace_id`、`span_id`、`request_id`
-- 涉及资源时可追加 `project_id`、`application_id`、`active_manifest_id`
+- do not add ID-like labels to custom metrics
+- `/metrics`, `/healthz`, `/readyz`, and `/debug/pprof/*` are excluded from business HTTP telemetry
 
 ## Profile
 
-- 保留 `pprof`
-- 仅在需要诊断性能问题时启用
-
-## 禁止项
-
-- 不要把高基数字段放进 metrics label
-- 不要把 `/metrics`、`/healthz`、`/readyz`、`/debug/pprof/*` 当作业务流量
+- `pprof` is disabled by default
+- Pyroscope is disabled by default
+- both are enabled only through explicit runtime configuration

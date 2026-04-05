@@ -1,0 +1,169 @@
+package api
+
+import (
+	"bytes"
+	"context"
+	"database/sql"
+	"encoding/json"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
+	"github.com/bsonger/devflow-app-service/pkg/model"
+	"github.com/bsonger/devflow-app-service/pkg/service"
+	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
+)
+
+type stubApplicationService struct {
+	createFn               func(context.Context, *model.Application) (uuid.UUID, error)
+	getFn                  func(context.Context, uuid.UUID) (*model.Application, error)
+	updateFn               func(context.Context, *model.Application) error
+	deleteFn               func(context.Context, uuid.UUID) error
+	updateActiveManifestFn func(context.Context, uuid.UUID, uuid.UUID) error
+	listFn                 func(context.Context, service.ApplicationListFilter) ([]model.Application, error)
+}
+
+func (s stubApplicationService) Create(ctx context.Context, app *model.Application) (uuid.UUID, error) {
+	return s.createFn(ctx, app)
+}
+
+func (s stubApplicationService) Get(ctx context.Context, id uuid.UUID) (*model.Application, error) {
+	return s.getFn(ctx, id)
+}
+
+func (s stubApplicationService) Update(ctx context.Context, app *model.Application) error {
+	return s.updateFn(ctx, app)
+}
+
+func (s stubApplicationService) Delete(ctx context.Context, id uuid.UUID) error {
+	return s.deleteFn(ctx, id)
+}
+
+func (s stubApplicationService) UpdateActiveManifest(ctx context.Context, appID, manifestID uuid.UUID) error {
+	return s.updateActiveManifestFn(ctx, appID, manifestID)
+}
+
+func (s stubApplicationService) List(ctx context.Context, filter service.ApplicationListFilter) ([]model.Application, error) {
+	return s.listFn(ctx, filter)
+}
+
+func TestCreateApplicationReturnsEnvelope(t *testing.T) {
+	gin.SetMode(gin.ReleaseMode)
+	handler := &ApplicationHandler{
+		svc: stubApplicationService{
+			createFn: func(_ context.Context, app *model.Application) (uuid.UUID, error) {
+				return app.GetID(), nil
+			},
+		},
+	}
+
+	r := gin.New()
+	r.POST("/api/v1/applications", handler.Create)
+
+	body := bytes.NewBufferString(`{"project_id":"11111111-1111-1111-1111-111111111111","name":"web","repo_address":"git@github.com:bsonger/web.git"}`)
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/applications", body)
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+
+	r.ServeHTTP(rec, req)
+	if rec.Code != http.StatusCreated {
+		t.Fatalf("got %d want %d", rec.Code, http.StatusCreated)
+	}
+
+	var payload struct {
+		Data model.Application `json:"data"`
+	}
+	if err := json.Unmarshal(rec.Body.Bytes(), &payload); err != nil {
+		t.Fatalf("unmarshal body: %v", err)
+	}
+	if payload.Data.Name != "web" {
+		t.Fatalf("unexpected payload: %#v", payload.Data)
+	}
+}
+
+func TestListApplicationsReturnsEnvelope(t *testing.T) {
+	gin.SetMode(gin.ReleaseMode)
+	handler := &ApplicationHandler{
+		svc: stubApplicationService{
+			listFn: func(_ context.Context, filter service.ApplicationListFilter) ([]model.Application, error) {
+				if filter.ProjectID != nil {
+					t.Fatalf("unexpected project filter: %#v", filter)
+				}
+				return []model.Application{{Name: "web"}}, nil
+			},
+		},
+	}
+
+	r := gin.New()
+	r.GET("/api/v1/applications", handler.List)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/applications?page=1&page_size=20", nil)
+	rec := httptest.NewRecorder()
+
+	r.ServeHTTP(rec, req)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("got %d want %d", rec.Code, http.StatusOK)
+	}
+
+	var payload struct {
+		Data       []model.Application `json:"data"`
+		Pagination struct {
+			Page     int `json:"page"`
+			PageSize int `json:"page_size"`
+			Total    int `json:"total"`
+		} `json:"pagination"`
+	}
+	if err := json.Unmarshal(rec.Body.Bytes(), &payload); err != nil {
+		t.Fatalf("unmarshal body: %v", err)
+	}
+	if len(payload.Data) != 1 || payload.Pagination.Total != 1 {
+		t.Fatalf("unexpected payload: %#v", payload)
+	}
+}
+
+func TestUpdateActiveManifestReturnsNoContent(t *testing.T) {
+	gin.SetMode(gin.ReleaseMode)
+	handler := &ApplicationHandler{
+		svc: stubApplicationService{
+			updateActiveManifestFn: func(_ context.Context, _, _ uuid.UUID) error {
+				return nil
+			},
+		},
+	}
+
+	r := gin.New()
+	r.PATCH("/api/v1/applications/:id/active_manifest", handler.UpdateActiveManifest)
+
+	body := bytes.NewBufferString(`{"manifest_id":"22222222-2222-2222-2222-222222222222"}`)
+	req := httptest.NewRequest(http.MethodPatch, "/api/v1/applications/"+uuid.New().String()+"/active_manifest", body)
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+
+	r.ServeHTTP(rec, req)
+	if rec.Code != http.StatusNoContent {
+		t.Fatalf("got %d want %d", rec.Code, http.StatusNoContent)
+	}
+}
+
+func TestGetApplicationNotFoundReturnsErrorEnvelope(t *testing.T) {
+	gin.SetMode(gin.ReleaseMode)
+	handler := &ApplicationHandler{
+		svc: stubApplicationService{
+			getFn: func(_ context.Context, _ uuid.UUID) (*model.Application, error) {
+				return nil, sql.ErrNoRows
+			},
+		},
+	}
+
+	r := gin.New()
+	r.GET("/api/v1/applications/:id", handler.Get)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/applications/"+uuid.New().String(), nil)
+	rec := httptest.NewRecorder()
+
+	r.ServeHTTP(rec, req)
+	if rec.Code != http.StatusNotFound {
+		t.Fatalf("got %d want %d", rec.Code, http.StatusNotFound)
+	}
+}

@@ -6,7 +6,6 @@
 
 - `Project`
 - `Application`
-- `ServiceResource`
 
 It also owns the narrow `Application.active_manifest` binding endpoint.
 
@@ -28,27 +27,21 @@ It also owns the narrow `Application.active_manifest` binding endpoint.
 - `DELETE /api/v1/applications/{id}`
 - `PATCH /api/v1/applications/{id}/active_manifest`
 
-### `ServiceResource`
-- `GET /api/v1/applications/{id}/services`
-- `POST /api/v1/applications/{id}/services`
-- `GET /api/v1/services/{id}`
-- `PUT /api/v1/services/{id}`
-- `DELETE /api/v1/services/{id}`
-
 ## Request Rules
 
-- all list endpoints support pagination parameters consistent with Swagger
+- all list endpoints use `page` and `page_size`
 - `PATCH /api/v1/applications/{id}/active_manifest` requires `manifest_id`
 - `active_manifest` only represents the currently bound manifest, not build/release orchestration state
-- `Application` owns stable app metadata such as `project_id`, `name`, `repo_address`, and release strategy type
-- `ServiceResource` is a child resource under `Application`; one application may own multiple service resources
-- `ServiceResource` owns traffic-exposure metadata such as `internet` and `ports`
+- `Application` owns stable app metadata such as `project_id`, `name`, `repo_address`, `labels`, and `active_manifest_id`
 - app-service does not own environment variables
 - app-service does not own manifests, releases, configuration revisions, or verification records
 
 ## Response Rules
 
-- list endpoints follow the common pagination shape used in this repo
+- create endpoints return `201` with `{ "data": ... }`
+- get endpoints return `200` with `{ "data": ... }`
+- list endpoints return `{ "data": [...], "pagination": { "page", "page_size", "total" } }`
+- `PUT`, `PATCH`, and `DELETE` return `204 No Content`
 - `404` means the resource does not exist
 - `400` means invalid request input or invalid reference
 - `409` is reserved for state or boundary conflicts
@@ -60,6 +53,17 @@ It also owns the narrow `Application.active_manifest` binding endpoint.
 - resource not found -> `404`
 - state/reference conflict -> `409`
 - internal/storage error -> `500`
+
+Error responses use:
+
+```json
+{
+  "error": {
+    "code": "invalid_argument",
+    "message": "invalid project_id"
+  }
+}
+```
 
 ## Boundary Note
 
