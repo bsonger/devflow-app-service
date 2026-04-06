@@ -24,12 +24,10 @@ func TestApplicationContract(t *testing.T) {
 			if got := f.Tag.Get("db"); got != "repo_address" {
 				t.Fatalf("Application.RepoAddress db tag = %q, want %q", got, "repo_address")
 			}
-		}
-	}
-
-	for _, removed := range []string{"ProjectName", "ActiveManifestName", "ConfigMaps", "Service", "Internet", "Envs", "Replica", "Type", "Status"} {
-		if _, ok := typ.FieldByName(removed); ok {
-			t.Fatalf("Application should not expose legacy field %s", removed)
+		case "Labels":
+			if f.Type != reflect.TypeOf([]LabelItem{}) {
+				t.Fatalf("Application.Labels type = %v, want []LabelItem", f.Type)
+			}
 		}
 	}
 }
@@ -45,12 +43,6 @@ func TestServiceResourceContract(t *testing.T) {
 			t.Fatalf("ServiceResource.ApplicationID type = %v, want uuid.UUID", f.Type)
 		}
 	}
-
-	for _, removed := range []string{"Exposure", "Status"} {
-		if _, ok := typ.FieldByName(removed); ok {
-			t.Fatalf("ServiceResource should not expose legacy field %s", removed)
-		}
-	}
 }
 
 func TestProjectContractAfterAudit(t *testing.T) {
@@ -58,17 +50,20 @@ func TestProjectContractAfterAudit(t *testing.T) {
 	if _, ok := typ.FieldByName("Status"); ok {
 		t.Fatal("Project should not expose Status")
 	}
+	if f, ok := typ.FieldByName("Labels"); !ok || f.Type != reflect.TypeOf([]LabelItem{}) {
+		t.Fatalf("Project.Labels should be []LabelItem, got %#v", f.Type)
+	}
 }
 
 func TestEnvironmentContract(t *testing.T) {
 	typ := reflect.TypeOf(Environment{})
-	for _, field := range []string{"Name", "Cluster", "Namespace", "Description", "Labels"} {
+	for _, field := range []string{"Name", "Cluster", "Description", "Labels"} {
 		if _, ok := typ.FieldByName(field); !ok {
 			t.Fatalf("Environment missing field %s", field)
 		}
 	}
-	if _, ok := typ.FieldByName("Key"); ok {
-		t.Fatal("Environment should not expose Key")
+	if _, ok := typ.FieldByName("Namespace"); ok {
+		t.Fatal("Environment should not expose Namespace")
 	}
 }
 

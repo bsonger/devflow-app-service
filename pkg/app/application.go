@@ -3,7 +3,6 @@ package app
 import (
 	"context"
 	"database/sql"
-	"encoding/json"
 	"errors"
 	"strings"
 	"time"
@@ -297,9 +296,11 @@ func scanApplication(scanner interface {
 		app.DeletedAt = &deletedAt.Time
 	}
 	if len(labelsBytes) > 0 {
-		if err := json.Unmarshal(labelsBytes, &app.Labels); err != nil {
+		labels, err := unmarshalLabels(labelsBytes)
+		if err != nil {
 			return nil, err
 		}
+		app.Labels = labels
 	}
 
 	return &app, nil

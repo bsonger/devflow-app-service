@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -224,19 +225,38 @@ func scanProject(scanner interface {
 		project.DeletedAt = &deletedAt.Time
 	}
 	if len(labelsBytes) > 0 {
-		if err := json.Unmarshal(labelsBytes, &project.Labels); err != nil {
+		labels, err := unmarshalLabels(labelsBytes)
+		if err != nil {
 			return nil, err
 		}
+		project.Labels = labels
 	}
 
 	return &project, nil
 }
 
-func marshalLabels(labels map[string]string) ([]byte, error) {
+func marshalLabels(labels []domain.LabelItem) ([]byte, error) {
 	if labels == nil {
-		return []byte("{}"), nil
+		return []byte("[]"), nil
 	}
 	return json.Marshal(labels)
+}
+
+func unmarshalLabels(raw []byte) ([]domain.LabelItem, error) {
+	var labels []domain.LabelItem
+	if err := json.Unmarshal(raw, &labels); err == nil {
+		return labels, nil
+	}
+	var legacy map[string]string
+	if err := json.Unmarshal(raw, &legacy); err != nil {
+		return nil, err
+	}
+	labels = make([]domain.LabelItem, 0, len(legacy))
+	for key, value := range legacy {
+		labels = append(labels, domain.LabelItem{Key: key, Value: value})
+	}
+	sort.Slice(labels, func(i, j int) bool { return labels[i].Key < labels[j].Key })
+	return labels, nil
 }
 
 func placeholderClause(column string, position int) string {

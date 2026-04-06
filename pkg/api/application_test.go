@@ -27,41 +27,30 @@ type stubApplicationService struct {
 func (s stubApplicationService) Create(ctx context.Context, app *domain.Application) (uuid.UUID, error) {
 	return s.createFn(ctx, app)
 }
-
 func (s stubApplicationService) Get(ctx context.Context, id uuid.UUID) (*domain.Application, error) {
 	return s.getFn(ctx, id)
 }
-
 func (s stubApplicationService) Update(ctx context.Context, app *domain.Application) error {
 	return s.updateFn(ctx, app)
 }
-
 func (s stubApplicationService) Delete(ctx context.Context, id uuid.UUID) error {
 	return s.deleteFn(ctx, id)
 }
-
 func (s stubApplicationService) UpdateActiveManifest(ctx context.Context, appID, manifestID uuid.UUID) error {
 	return s.updateActiveManifestFn(ctx, appID, manifestID)
 }
-
 func (s stubApplicationService) List(ctx context.Context, filter app.ApplicationListFilter) ([]domain.Application, error) {
 	return s.listFn(ctx, filter)
 }
 
 func TestCreateApplicationReturnsEnvelope(t *testing.T) {
 	gin.SetMode(gin.ReleaseMode)
-	handler := &ApplicationHandler{
-		svc: stubApplicationService{
-			createFn: func(_ context.Context, app *domain.Application) (uuid.UUID, error) {
-				return app.GetID(), nil
-			},
-		},
-	}
+	handler := &ApplicationHandler{svc: stubApplicationService{createFn: func(_ context.Context, app *domain.Application) (uuid.UUID, error) { return app.GetID(), nil }}}
 
 	r := gin.New()
 	r.POST("/api/v1/applications", handler.Create)
 
-	body := bytes.NewBufferString(`{"project_id":"11111111-1111-1111-1111-111111111111","name":"web","repo_address":"git@github.com:bsonger/web.git","description":"customer web","labels":{"tier":"frontend"}}`)
+	body := bytes.NewBufferString(`{"project_id":"11111111-1111-1111-1111-111111111111","name":"web","repo_address":"git@github.com:bsonger/web.git","description":"customer web","labels":[{"key":"tier","value":"frontend"}]}`)
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/applications", body)
 	req.Header.Set("Content-Type", "application/json")
 	rec := httptest.NewRecorder()
@@ -77,23 +66,19 @@ func TestCreateApplicationReturnsEnvelope(t *testing.T) {
 	if err := json.Unmarshal(rec.Body.Bytes(), &payload); err != nil {
 		t.Fatalf("unmarshal body: %v", err)
 	}
-	if payload.Data.Name != "web" || payload.Data.Description != "customer web" || payload.Data.Labels["tier"] != "frontend" {
+	if payload.Data.Name != "web" || payload.Data.Description != "customer web" || payload.Data.Labels[0].Value != "frontend" {
 		t.Fatalf("unexpected payload: %#v", payload.Data)
 	}
 }
 
 func TestListApplicationsReturnsEnvelope(t *testing.T) {
 	gin.SetMode(gin.ReleaseMode)
-	handler := &ApplicationHandler{
-		svc: stubApplicationService{
-			listFn: func(_ context.Context, filter app.ApplicationListFilter) ([]domain.Application, error) {
-				if filter.ProjectID != nil {
-					t.Fatalf("unexpected project filter: %#v", filter)
-				}
-				return []domain.Application{{Name: "web"}}, nil
-			},
-		},
-	}
+	handler := &ApplicationHandler{svc: stubApplicationService{listFn: func(_ context.Context, filter app.ApplicationListFilter) ([]domain.Application, error) {
+		if filter.ProjectID != nil {
+			t.Fatalf("unexpected project filter: %#v", filter)
+		}
+		return []domain.Application{{Name: "web"}}, nil
+	}}}
 
 	r := gin.New()
 	r.GET("/api/v1/applications", handler.List)
@@ -124,13 +109,7 @@ func TestListApplicationsReturnsEnvelope(t *testing.T) {
 
 func TestUpdateActiveManifestReturnsNoContent(t *testing.T) {
 	gin.SetMode(gin.ReleaseMode)
-	handler := &ApplicationHandler{
-		svc: stubApplicationService{
-			updateActiveManifestFn: func(_ context.Context, _, _ uuid.UUID) error {
-				return nil
-			},
-		},
-	}
+	handler := &ApplicationHandler{svc: stubApplicationService{updateActiveManifestFn: func(_ context.Context, _, _ uuid.UUID) error { return nil }}}
 
 	r := gin.New()
 	r.PATCH("/api/v1/applications/:id/active_manifest", handler.UpdateActiveManifest)
@@ -148,13 +127,7 @@ func TestUpdateActiveManifestReturnsNoContent(t *testing.T) {
 
 func TestGetApplicationNotFoundReturnsErrorEnvelope(t *testing.T) {
 	gin.SetMode(gin.ReleaseMode)
-	handler := &ApplicationHandler{
-		svc: stubApplicationService{
-			getFn: func(_ context.Context, _ uuid.UUID) (*domain.Application, error) {
-				return nil, sql.ErrNoRows
-			},
-		},
-	}
+	handler := &ApplicationHandler{svc: stubApplicationService{getFn: func(_ context.Context, _ uuid.UUID) (*domain.Application, error) { return nil, sql.ErrNoRows }}}
 
 	r := gin.New()
 	r.GET("/api/v1/applications/:id", handler.Get)

@@ -1,13 +1,20 @@
 # DevFlow App Service
 
-`devflow-app-service` is the backend owner for `Project` and `Application` metadata.
+`devflow-app-service` owns `Project` and `Application` metadata.
+
+## Current contract highlights
+
+- `Project.labels` and `Application.labels` now use ordered `[{ key, value }]`
+- responses include `created_at` and `updated_at`
+- `Application.active_manifest_id` remains the only app-service release-facing binding
+- environment-specific console views are **not** owned here
 
 ## Backend Role
 
 - own `Project`
 - own `Application`
 - maintain `Application.active_manifest` binding
-- provide application/project catalog queries for other services and the future platform
+- provide application/project catalog queries for other services and the platform console
 
 ## Local Run
 

@@ -27,41 +27,30 @@ type stubProjectService struct {
 func (s stubProjectService) Create(ctx context.Context, project *domain.Project) (uuid.UUID, error) {
 	return s.createFn(ctx, project)
 }
-
 func (s stubProjectService) Get(ctx context.Context, id uuid.UUID) (*domain.Project, error) {
 	return s.getFn(ctx, id)
 }
-
 func (s stubProjectService) Update(ctx context.Context, project *domain.Project) error {
 	return s.updateFn(ctx, project)
 }
-
 func (s stubProjectService) Delete(ctx context.Context, id uuid.UUID) error {
 	return s.deleteFn(ctx, id)
 }
-
 func (s stubProjectService) List(ctx context.Context, filter app.ProjectListFilter) ([]domain.Project, error) {
 	return s.listFn(ctx, filter)
 }
-
 func (s stubProjectService) ListApplications(ctx context.Context, projectID uuid.UUID) ([]domain.Application, error) {
 	return s.listApplicationsFn(ctx, projectID)
 }
 
 func TestCreateProjectReturnsEnvelope(t *testing.T) {
 	gin.SetMode(gin.ReleaseMode)
-	handler := &ProjectHandler{
-		svc: stubProjectService{
-			createFn: func(_ context.Context, project *domain.Project) (uuid.UUID, error) {
-				return project.GetID(), nil
-			},
-		},
-	}
+	handler := &ProjectHandler{svc: stubProjectService{createFn: func(_ context.Context, project *domain.Project) (uuid.UUID, error) { return project.GetID(), nil }}}
 
 	r := gin.New()
 	r.POST("/api/v1/projects", handler.Create)
 
-	body := bytes.NewBufferString(`{"name":"alpha","description":"platform project","labels":{"team":"platform"}}`)
+	body := bytes.NewBufferString(`{"name":"alpha","description":"platform project","labels":[{"key":"team","value":"platform"}]}`)
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/projects", body)
 	req.Header.Set("Content-Type", "application/json")
 	rec := httptest.NewRecorder()
@@ -77,23 +66,19 @@ func TestCreateProjectReturnsEnvelope(t *testing.T) {
 	if err := json.Unmarshal(rec.Body.Bytes(), &payload); err != nil {
 		t.Fatalf("unmarshal body: %v", err)
 	}
-	if payload.Data.Name != "alpha" || payload.Data.Description != "platform project" {
+	if payload.Data.Name != "alpha" || payload.Data.Description != "platform project" || len(payload.Data.Labels) != 1 {
 		t.Fatalf("unexpected payload: %#v", payload.Data)
 	}
 }
 
 func TestListProjectsReturnsEnvelope(t *testing.T) {
 	gin.SetMode(gin.ReleaseMode)
-	handler := &ProjectHandler{
-		svc: stubProjectService{
-			listFn: func(_ context.Context, filter app.ProjectListFilter) ([]domain.Project, error) {
-				if filter.Name != "" {
-					t.Fatalf("unexpected filter: %#v", filter)
-				}
-				return []domain.Project{{Name: "alpha", Description: "platform project"}}, nil
-			},
-		},
-	}
+	handler := &ProjectHandler{svc: stubProjectService{listFn: func(_ context.Context, filter app.ProjectListFilter) ([]domain.Project, error) {
+		if filter.Name != "" {
+			t.Fatalf("unexpected filter: %#v", filter)
+		}
+		return []domain.Project{{Name: "alpha", Description: "platform project"}}, nil
+	}}}
 
 	r := gin.New()
 	r.GET("/api/v1/projects", handler.List)
@@ -124,13 +109,7 @@ func TestListProjectsReturnsEnvelope(t *testing.T) {
 
 func TestDeleteProjectNotFoundReturnsErrorEnvelope(t *testing.T) {
 	gin.SetMode(gin.ReleaseMode)
-	handler := &ProjectHandler{
-		svc: stubProjectService{
-			deleteFn: func(_ context.Context, _ uuid.UUID) error {
-				return sql.ErrNoRows
-			},
-		},
-	}
+	handler := &ProjectHandler{svc: stubProjectService{deleteFn: func(_ context.Context, _ uuid.UUID) error { return sql.ErrNoRows }}}
 
 	r := gin.New()
 	r.DELETE("/api/v1/projects/:id", handler.Delete)

@@ -29,9 +29,9 @@ type ProjectHandler struct {
 }
 
 type CreateProjectRequest struct {
-	Name        string            `json:"name"`
-	Description string            `json:"description,omitempty"`
-	Labels      map[string]string `json:"labels,omitempty"`
+	Name        string             `json:"name"`
+	Description string             `json:"description,omitempty"`
+	Labels      []domain.LabelItem `json:"labels,omitempty"`
 }
 
 type UpdateProjectRequest = CreateProjectRequest

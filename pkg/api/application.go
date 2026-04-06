@@ -35,20 +35,20 @@ func NewApplicationHandler() *ApplicationHandler {
 }
 
 type CreateApplicationRequest struct {
-	ProjectID   uuid.UUID         `json:"project_id"`
-	Name        string            `json:"name"`
-	RepoAddress string            `json:"repo_address"`
-	Description string            `json:"description,omitempty"`
-	Labels      map[string]string `json:"labels,omitempty"`
+	ProjectID   uuid.UUID          `json:"project_id"`
+	Name        string             `json:"name"`
+	RepoAddress string             `json:"repo_address"`
+	Description string             `json:"description,omitempty"`
+	Labels      []domain.LabelItem `json:"labels,omitempty"`
 }
 
 type UpdateApplicationRequest struct {
-	ProjectID        uuid.UUID         `json:"project_id"`
-	Name             string            `json:"name"`
-	RepoAddress      string            `json:"repo_address"`
-	Description      string            `json:"description,omitempty"`
-	ActiveManifestID *uuid.UUID        `json:"active_manifest_id,omitempty"`
-	Labels           map[string]string `json:"labels,omitempty"`
+	ProjectID        uuid.UUID          `json:"project_id"`
+	Name             string             `json:"name"`
+	RepoAddress      string             `json:"repo_address"`
+	Description      string             `json:"description,omitempty"`
+	ActiveManifestID *uuid.UUID         `json:"active_manifest_id,omitempty"`
+	Labels           []domain.LabelItem `json:"labels,omitempty"`
 }
 
 type UpdateActiveManifestRequest struct {
