@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/bsonger/devflow-app-service/pkg/config"
+	"github.com/bsonger/devflow-app-service/pkg/infra/config"
 	"github.com/bsonger/devflow-app-service/pkg/router"
 	"github.com/bsonger/devflow-service-common/bootstrap"
 	"github.com/bsonger/devflow-service-common/observability"

@@ -9,30 +9,30 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/bsonger/devflow-app-service/pkg/model"
-	"github.com/bsonger/devflow-app-service/pkg/service"
+	"github.com/bsonger/devflow-app-service/pkg/app"
+	"github.com/bsonger/devflow-app-service/pkg/domain"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
 
 type stubProjectService struct {
-	createFn           func(context.Context, *model.Project) (uuid.UUID, error)
-	getFn              func(context.Context, uuid.UUID) (*model.Project, error)
-	updateFn           func(context.Context, *model.Project) error
+	createFn           func(context.Context, *domain.Project) (uuid.UUID, error)
+	getFn              func(context.Context, uuid.UUID) (*domain.Project, error)
+	updateFn           func(context.Context, *domain.Project) error
 	deleteFn           func(context.Context, uuid.UUID) error
-	listFn             func(context.Context, service.ProjectListFilter) ([]model.Project, error)
-	listApplicationsFn func(context.Context, uuid.UUID) ([]model.Application, error)
+	listFn             func(context.Context, app.ProjectListFilter) ([]domain.Project, error)
+	listApplicationsFn func(context.Context, uuid.UUID) ([]domain.Application, error)
 }
 
-func (s stubProjectService) Create(ctx context.Context, project *model.Project) (uuid.UUID, error) {
+func (s stubProjectService) Create(ctx context.Context, project *domain.Project) (uuid.UUID, error) {
 	return s.createFn(ctx, project)
 }
 
-func (s stubProjectService) Get(ctx context.Context, id uuid.UUID) (*model.Project, error) {
+func (s stubProjectService) Get(ctx context.Context, id uuid.UUID) (*domain.Project, error) {
 	return s.getFn(ctx, id)
 }
 
-func (s stubProjectService) Update(ctx context.Context, project *model.Project) error {
+func (s stubProjectService) Update(ctx context.Context, project *domain.Project) error {
 	return s.updateFn(ctx, project)
 }
 
@@ -40,11 +40,11 @@ func (s stubProjectService) Delete(ctx context.Context, id uuid.UUID) error {
 	return s.deleteFn(ctx, id)
 }
 
-func (s stubProjectService) List(ctx context.Context, filter service.ProjectListFilter) ([]model.Project, error) {
+func (s stubProjectService) List(ctx context.Context, filter app.ProjectListFilter) ([]domain.Project, error) {
 	return s.listFn(ctx, filter)
 }
 
-func (s stubProjectService) ListApplications(ctx context.Context, projectID uuid.UUID) ([]model.Application, error) {
+func (s stubProjectService) ListApplications(ctx context.Context, projectID uuid.UUID) ([]domain.Application, error) {
 	return s.listApplicationsFn(ctx, projectID)
 }
 
@@ -52,7 +52,7 @@ func TestCreateProjectReturnsEnvelope(t *testing.T) {
 	gin.SetMode(gin.ReleaseMode)
 	handler := &ProjectHandler{
 		svc: stubProjectService{
-			createFn: func(_ context.Context, project *model.Project) (uuid.UUID, error) {
+			createFn: func(_ context.Context, project *domain.Project) (uuid.UUID, error) {
 				return project.GetID(), nil
 			},
 		},
@@ -61,7 +61,7 @@ func TestCreateProjectReturnsEnvelope(t *testing.T) {
 	r := gin.New()
 	r.POST("/api/v1/projects", handler.Create)
 
-	body := bytes.NewBufferString(`{"name":"alpha","key":"alpha","labels":{"team":"platform"}}`)
+	body := bytes.NewBufferString(`{"name":"alpha","description":"platform project","labels":{"team":"platform"}}`)
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/projects", body)
 	req.Header.Set("Content-Type", "application/json")
 	rec := httptest.NewRecorder()
@@ -72,12 +72,12 @@ func TestCreateProjectReturnsEnvelope(t *testing.T) {
 	}
 
 	var payload struct {
-		Data model.Project `json:"data"`
+		Data domain.Project `json:"data"`
 	}
 	if err := json.Unmarshal(rec.Body.Bytes(), &payload); err != nil {
 		t.Fatalf("unmarshal body: %v", err)
 	}
-	if payload.Data.Name != "alpha" || payload.Data.Key != "alpha" {
+	if payload.Data.Name != "alpha" || payload.Data.Description != "platform project" {
 		t.Fatalf("unexpected payload: %#v", payload.Data)
 	}
 }
@@ -86,11 +86,11 @@ func TestListProjectsReturnsEnvelope(t *testing.T) {
 	gin.SetMode(gin.ReleaseMode)
 	handler := &ProjectHandler{
 		svc: stubProjectService{
-			listFn: func(_ context.Context, filter service.ProjectListFilter) ([]model.Project, error) {
+			listFn: func(_ context.Context, filter app.ProjectListFilter) ([]domain.Project, error) {
 				if filter.Name != "" {
 					t.Fatalf("unexpected filter: %#v", filter)
 				}
-				return []model.Project{{Name: "alpha", Key: "alpha"}}, nil
+				return []domain.Project{{Name: "alpha", Description: "platform project"}}, nil
 			},
 		},
 	}
@@ -107,7 +107,7 @@ func TestListProjectsReturnsEnvelope(t *testing.T) {
 	}
 
 	var payload struct {
-		Data       []model.Project `json:"data"`
+		Data       []domain.Project `json:"data"`
 		Pagination struct {
 			Page     int `json:"page"`
 			PageSize int `json:"page_size"`

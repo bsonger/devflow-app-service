@@ -2,17 +2,13 @@
 
 ## Purpose
 
-`ServiceResource` defines stable service exposure for one application.
+`ServiceResource` defines stable service metadata for one application.
 
 ## Owns
 
-- exposure
+- description
+- labels
 - service-to-pod port mappings
-
-## Exposure
-
-- `internal`
-- `external`
 
 ## Ports
 

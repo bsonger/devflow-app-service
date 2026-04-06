@@ -1,4 +1,4 @@
-package service
+package app
 
 import (
 	"context"
@@ -8,7 +8,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/bsonger/devflow-app-service/pkg/store"
+	"github.com/bsonger/devflow-app-service/pkg/infra/store"
 	"github.com/bsonger/devflow-service-common/loggingx"
 	"github.com/google/uuid"
 	"go.uber.org/zap"

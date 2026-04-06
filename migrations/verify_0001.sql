@@ -25,6 +25,34 @@ BEGIN
   END IF;
   IF NOT EXISTS (
     SELECT 1
+    FROM information_schema.columns
+    WHERE table_name = 'applications' AND column_name = 'description'
+  ) THEN
+    RAISE EXCEPTION 'missing column: applications.description';
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_name = 'environments' AND column_name = 'description'
+  ) THEN
+    RAISE EXCEPTION 'missing column: environments.description';
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_name = 'services' AND column_name = 'description'
+  ) THEN
+    RAISE EXCEPTION 'missing column: services.description';
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_name = 'services' AND column_name = 'labels'
+  ) THEN
+    RAISE EXCEPTION 'missing column: services.labels';
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1
     FROM pg_indexes
     WHERE schemaname = 'public' AND indexname = 'uq_applications_project_name_active'
   ) THEN

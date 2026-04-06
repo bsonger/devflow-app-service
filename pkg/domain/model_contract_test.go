@@ -1,4 +1,4 @@
-package model
+package domain
 
 import (
 	"reflect"
@@ -10,7 +10,7 @@ import (
 func TestApplicationContract(t *testing.T) {
 	typ := reflect.TypeOf(Application{})
 
-	for _, field := range []string{"ProjectID", "Name", "RepoAddress", "ActiveManifestID", "Labels"} {
+	for _, field := range []string{"ProjectID", "Name", "RepoAddress", "Description", "ActiveManifestID", "Labels"} {
 		f, ok := typ.FieldByName(field)
 		if !ok {
 			t.Fatalf("Application missing field %s", field)
@@ -36,13 +36,19 @@ func TestApplicationContract(t *testing.T) {
 
 func TestServiceResourceContract(t *testing.T) {
 	typ := reflect.TypeOf(ServiceResource{})
-	for _, field := range []string{"ApplicationID", "Name", "Exposure", "Ports", "Status"} {
+	for _, field := range []string{"ApplicationID", "Name", "Description", "Labels", "Ports"} {
 		f, ok := typ.FieldByName(field)
 		if !ok {
 			t.Fatalf("ServiceResource missing field %s", field)
 		}
 		if field == "ApplicationID" && f.Type != reflect.TypeOf(uuid.UUID{}) {
 			t.Fatalf("ServiceResource.ApplicationID type = %v, want uuid.UUID", f.Type)
+		}
+	}
+
+	for _, removed := range []string{"Exposure", "Status"} {
+		if _, ok := typ.FieldByName(removed); ok {
+			t.Fatalf("ServiceResource should not expose legacy field %s", removed)
 		}
 	}
 }
@@ -56,10 +62,13 @@ func TestProjectContractAfterAudit(t *testing.T) {
 
 func TestEnvironmentContract(t *testing.T) {
 	typ := reflect.TypeOf(Environment{})
-	for _, field := range []string{"Key", "Name", "Cluster", "Namespace", "Labels"} {
+	for _, field := range []string{"Name", "Cluster", "Namespace", "Description", "Labels"} {
 		if _, ok := typ.FieldByName(field); !ok {
 			t.Fatalf("Environment missing field %s", field)
 		}
+	}
+	if _, ok := typ.FieldByName("Key"); ok {
+		t.Fatal("Environment should not expose Key")
 	}
 }
 

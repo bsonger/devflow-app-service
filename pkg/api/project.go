@@ -6,8 +6,8 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/bsonger/devflow-app-service/pkg/model"
-	"github.com/bsonger/devflow-app-service/pkg/service"
+	"github.com/bsonger/devflow-app-service/pkg/app"
+	"github.com/bsonger/devflow-app-service/pkg/domain"
 	"github.com/bsonger/devflow-service-common/httpx"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -16,12 +16,12 @@ import (
 var ProjectRouteApi = NewProjectHandler()
 
 type projectService interface {
-	Create(ctx context.Context, project *model.Project) (uuid.UUID, error)
-	Get(ctx context.Context, id uuid.UUID) (*model.Project, error)
-	Update(ctx context.Context, project *model.Project) error
+	Create(ctx context.Context, project *domain.Project) (uuid.UUID, error)
+	Get(ctx context.Context, id uuid.UUID) (*domain.Project, error)
+	Update(ctx context.Context, project *domain.Project) error
 	Delete(ctx context.Context, id uuid.UUID) error
-	List(ctx context.Context, filter service.ProjectListFilter) ([]model.Project, error)
-	ListApplications(ctx context.Context, projectID uuid.UUID) ([]model.Application, error)
+	List(ctx context.Context, filter app.ProjectListFilter) ([]domain.Project, error)
+	ListApplications(ctx context.Context, projectID uuid.UUID) ([]domain.Application, error)
 }
 
 type ProjectHandler struct {
@@ -30,17 +30,14 @@ type ProjectHandler struct {
 
 type CreateProjectRequest struct {
 	Name        string            `json:"name"`
-	Key         string            `json:"key"`
 	Description string            `json:"description,omitempty"`
-	Namespace   string            `json:"namespace,omitempty"`
-	Owner       string            `json:"owner,omitempty"`
 	Labels      map[string]string `json:"labels,omitempty"`
 }
 
 type UpdateProjectRequest = CreateProjectRequest
 
 func NewProjectHandler() *ProjectHandler {
-	return &ProjectHandler{svc: service.ProjectService}
+	return &ProjectHandler{svc: app.ProjectService}
 }
 
 // Create
@@ -50,7 +47,7 @@ func NewProjectHandler() *ProjectHandler {
 // @Accept json
 // @Produce json
 // @Param data body api.CreateProjectRequest true "Project Data"
-// @Success 201 {object} httpx.DataResponse[model.Project]
+// @Success 201 {object} httpx.DataResponse[domain.Project]
 // @Router /api/v1/projects [post]
 func (h *ProjectHandler) Create(c *gin.Context) {
 	var req CreateProjectRequest
@@ -59,16 +56,12 @@ func (h *ProjectHandler) Create(c *gin.Context) {
 		return
 	}
 
-	project := &model.Project{
+	project := &domain.Project{
 		Name:        req.Name,
-		Key:         req.Key,
 		Description: req.Description,
-		Namespace:   req.Namespace,
-		Owner:       req.Owner,
 		Labels:      req.Labels,
 	}
 	project.WithCreateDefault()
-	project.ApplyDefaults()
 
 	_, err := h.svc.Create(c.Request.Context(), project)
 	if err != nil {
@@ -83,7 +76,7 @@ func (h *ProjectHandler) Create(c *gin.Context) {
 // @Summary 获取项目
 // @Tags Project
 // @Param id path string true "Project ID"
-// @Success 200 {object} httpx.DataResponse[model.Project]
+// @Success 200 {object} httpx.DataResponse[domain.Project]
 // @Router /api/v1/projects/{id} [get]
 func (h *ProjectHandler) Get(c *gin.Context) {
 	id, err := uuid.Parse(c.Param("id"))
@@ -125,16 +118,12 @@ func (h *ProjectHandler) Update(c *gin.Context) {
 		return
 	}
 
-	project := model.Project{
+	project := domain.Project{
 		Name:        req.Name,
-		Key:         req.Key,
 		Description: req.Description,
-		Namespace:   req.Namespace,
-		Owner:       req.Owner,
 		Labels:      req.Labels,
 	}
 	project.SetID(id)
-	project.ApplyDefaults()
 
 	if err := h.svc.Update(c.Request.Context(), &project); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -176,15 +165,12 @@ func (h *ProjectHandler) Delete(c *gin.Context) {
 // List
 // @Summary 获取项目列表
 // @Tags Project
-// @Success 200 {object} httpx.ListResponse[model.Project]
+// @Success 200 {object} httpx.ListResponse[domain.Project]
 // @Router /api/v1/projects [get]
 func (h *ProjectHandler) List(c *gin.Context) {
-	filter := service.ProjectListFilter{
+	filter := app.ProjectListFilter{
 		IncludeDeleted: httpx.IncludeDeleted(c),
 		Name:           c.Query("name"),
-		Key:            c.Query("key"),
-		Namespace:      c.Query("namespace"),
-		Owner:          c.Query("owner"),
 	}
 
 	projects, err := h.svc.List(c.Request.Context(), filter)
@@ -208,7 +194,7 @@ func (h *ProjectHandler) List(c *gin.Context) {
 // @Summary 获取项目下的应用列表
 // @Tags Project
 // @Param id path string true "Project ID"
-// @Success 200 {object} httpx.ListResponse[model.Application]
+// @Success 200 {object} httpx.ListResponse[domain.Application]
 // @Router /api/v1/projects/{id}/applications [get]
 func (h *ProjectHandler) ListApplications(c *gin.Context) {
 	id, err := uuid.Parse(c.Param("id"))

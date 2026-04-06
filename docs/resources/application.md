@@ -3,14 +3,14 @@
 ## Ownership
 
 - owner repo: `devflow-app-service`
-- authoritative model file: `pkg/model/application.go`
+- authoritative model file: `pkg/domain/application.go`
 - authoritative API doc: `docs/api-spec.md`
 - generated swagger: `docs/generated/swagger/swagger.yaml`
 
 ## Purpose
 
 `Application` 是应用元数据资源，并维护应用侧的 `active_manifest` 绑定。
-服务暴露信息已经拆分到独立的 `ServiceResource` 子资源。
+服务静态定义已经拆分到独立的 `ServiceResource` 子资源。
 
 ## Common base fields
 
@@ -28,6 +28,7 @@
 | `project_id` | `uuid.UUID` | required | user | 关联项目 ID |
 | `name` | `string` | required | user | 应用名 |
 | `repo_address` | `string` | required | user | 代码仓库地址 |
+| `description` | `string` | optional | user | 应用描述 |
 | `active_manifest_id` | `*uuid.UUID` | optional | system/user | 当前绑定的 manifest ID |
 | `labels` | `map[string]string` | optional | user | 应用标签 |
 
@@ -37,11 +38,10 @@
 
 | Field | Type | Description |
 |---|---|---|
-| `application_id` | `uuid.UUID` | 所属应用 |
 | `name` | `string` | 服务资源名 |
-| `exposure` | `ServiceExposure` | 暴露方式 |
+| `description` | `string` | 服务描述 |
+| `labels` | `map[string]string` | 服务标签 |
 | `ports` | `[]ServicePort` | 服务端口到 Pod 端口映射 |
-| `status` | `string` | 服务资源状态 |
 
 ## Active manifest binding
 
@@ -70,7 +70,7 @@
 
 ### Update
 - mutable fields:
-  - `name`, `repo_address`, `active_manifest_id`, `labels`
+  - `name`, `repo_address`, `description`, `active_manifest_id`, `labels`
 - immutable/system-managed fields:
   - `id`, `created_at`, `deleted_at`
 - special update path:
@@ -80,12 +80,12 @@
 
 - `project_id` 必须引用存在的 `Project`
 - `manifest_id` patch 时必须引用属于该应用的 manifest
-- 服务暴露相关校验由 `ServiceResource` 独立承担
+- 服务静态端口定义由 `ServiceResource` 独立承担
 
 ## Source pointers
 
 - router: `pkg/router/application.go`
 - handler: `pkg/api/application.go`
-- service: `pkg/service/application.go`
-- model: `pkg/model/application.go`
-- manifest reference helper: `pkg/model/manifest.go`
+- service: `pkg/app/application.go`
+- model: `pkg/domain/application.go`
+- manifest reference helper: `pkg/domain/manifest.go`

@@ -6,8 +6,8 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/bsonger/devflow-app-service/pkg/model"
-	"github.com/bsonger/devflow-app-service/pkg/service"
+	"github.com/bsonger/devflow-app-service/pkg/app"
+	"github.com/bsonger/devflow-app-service/pkg/domain"
 	"github.com/bsonger/devflow-service-common/httpx"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -16,12 +16,12 @@ import (
 var ApplicationRouteApi = NewApplicationHandler()
 
 type applicationService interface {
-	Create(ctx context.Context, app *model.Application) (uuid.UUID, error)
-	Get(ctx context.Context, id uuid.UUID) (*model.Application, error)
-	Update(ctx context.Context, app *model.Application) error
+	Create(ctx context.Context, application *domain.Application) (uuid.UUID, error)
+	Get(ctx context.Context, id uuid.UUID) (*domain.Application, error)
+	Update(ctx context.Context, application *domain.Application) error
 	Delete(ctx context.Context, id uuid.UUID) error
 	UpdateActiveManifest(ctx context.Context, appID, manifestID uuid.UUID) error
-	List(ctx context.Context, filter service.ApplicationListFilter) ([]model.Application, error)
+	List(ctx context.Context, filter app.ApplicationListFilter) ([]domain.Application, error)
 }
 
 type ApplicationHandler struct {
@@ -30,7 +30,7 @@ type ApplicationHandler struct {
 
 func NewApplicationHandler() *ApplicationHandler {
 	return &ApplicationHandler{
-		svc: service.ApplicationService,
+		svc: app.ApplicationService,
 	}
 }
 
@@ -38,6 +38,7 @@ type CreateApplicationRequest struct {
 	ProjectID   uuid.UUID         `json:"project_id"`
 	Name        string            `json:"name"`
 	RepoAddress string            `json:"repo_address"`
+	Description string            `json:"description,omitempty"`
 	Labels      map[string]string `json:"labels,omitempty"`
 }
 
@@ -45,6 +46,7 @@ type UpdateApplicationRequest struct {
 	ProjectID        uuid.UUID         `json:"project_id"`
 	Name             string            `json:"name"`
 	RepoAddress      string            `json:"repo_address"`
+	Description      string            `json:"description,omitempty"`
 	ActiveManifestID *uuid.UUID        `json:"active_manifest_id,omitempty"`
 	Labels           map[string]string `json:"labels,omitempty"`
 }
@@ -60,7 +62,7 @@ type UpdateActiveManifestRequest struct {
 // @Accept json
 // @Produce json
 // @Param data body api.CreateApplicationRequest true "Application Data"
-// @Success 201 {object} httpx.DataResponse[model.Application]
+// @Success 201 {object} httpx.DataResponse[domain.Application]
 // @Router /api/v1/applications [post]
 func (h *ApplicationHandler) Create(c *gin.Context) {
 	var req CreateApplicationRequest
@@ -68,16 +70,17 @@ func (h *ApplicationHandler) Create(c *gin.Context) {
 		httpx.WriteError(c, http.StatusBadRequest, "invalid_argument", err.Error(), nil)
 		return
 	}
-	app := &model.Application{
+	application := &domain.Application{
 		ProjectID:   req.ProjectID,
 		Name:        req.Name,
 		RepoAddress: req.RepoAddress,
+		Description: req.Description,
 		Labels:      req.Labels,
 	}
-	app.WithCreateDefault()
-	_, err := h.svc.Create(c.Request.Context(), app)
+	application.WithCreateDefault()
+	_, err := h.svc.Create(c.Request.Context(), application)
 	if err != nil {
-		if errors.Is(err, service.ErrProjectReferenceNotFound) {
+		if errors.Is(err, app.ErrProjectReferenceNotFound) {
 			httpx.WriteError(c, http.StatusBadRequest, "invalid_argument", err.Error(), nil)
 			return
 		}
@@ -85,14 +88,14 @@ func (h *ApplicationHandler) Create(c *gin.Context) {
 		return
 	}
 
-	httpx.WriteData(c, http.StatusCreated, app)
+	httpx.WriteData(c, http.StatusCreated, application)
 }
 
 // Get
 // @Summary	获取应用
 // @Tags		Application
 // @Param		id	path		string	true	"Application ID"
-// @Success	200	{object}	httpx.DataResponse[model.Application]
+// @Success	200	{object}	httpx.DataResponse[domain.Application]
 // @Router		/api/v1/applications/{id} [get]
 func (h *ApplicationHandler) Get(c *gin.Context) {
 	id, err := uuid.Parse(c.Param("id"))
@@ -101,7 +104,7 @@ func (h *ApplicationHandler) Get(c *gin.Context) {
 		return
 	}
 
-	app, err := h.svc.Get(c.Request.Context(), id)
+	application, err := h.svc.Get(c.Request.Context(), id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			httpx.WriteError(c, http.StatusNotFound, "not_found", "not found", nil)
@@ -111,7 +114,7 @@ func (h *ApplicationHandler) Get(c *gin.Context) {
 		return
 	}
 
-	httpx.WriteData(c, http.StatusOK, app)
+	httpx.WriteData(c, http.StatusOK, application)
 }
 
 // Update
@@ -134,17 +137,18 @@ func (h *ApplicationHandler) Update(c *gin.Context) {
 		return
 	}
 
-	app := model.Application{
+	application := domain.Application{
 		ProjectID:        req.ProjectID,
 		Name:             req.Name,
 		RepoAddress:      req.RepoAddress,
+		Description:      req.Description,
 		ActiveManifestID: req.ActiveManifestID,
 		Labels:           req.Labels,
 	}
-	app.SetID(id)
+	application.SetID(id)
 
-	if err := h.svc.Update(c.Request.Context(), &app); err != nil {
-		if errors.Is(err, service.ErrProjectReferenceNotFound) {
+	if err := h.svc.Update(c.Request.Context(), &application); err != nil {
+		if errors.Is(err, app.ErrProjectReferenceNotFound) {
 			httpx.WriteError(c, http.StatusBadRequest, "invalid_argument", err.Error(), nil)
 			return
 		}
@@ -225,10 +229,10 @@ func (h *ApplicationHandler) UpdateActiveManifest(c *gin.Context) {
 // List
 // @Summary 获取应用列表
 // @Tags    Application
-// @Success 200 {object} httpx.ListResponse[model.Application]
+// @Success 200 {object} httpx.ListResponse[domain.Application]
 // @Router  /api/v1/applications [get]
 func (h *ApplicationHandler) List(c *gin.Context) {
-	filter := service.ApplicationListFilter{
+	filter := app.ApplicationListFilter{
 		IncludeDeleted: httpx.IncludeDeleted(c),
 		Name:           c.Query("name"),
 		RepoAddress:    c.Query("repo_address"),

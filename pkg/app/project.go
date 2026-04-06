@@ -1,4 +1,4 @@
-package service
+package app
 
 import (
 	"context"
@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bsonger/devflow-app-service/pkg/model"
-	"github.com/bsonger/devflow-app-service/pkg/store"
+	"github.com/bsonger/devflow-app-service/pkg/domain"
+	"github.com/bsonger/devflow-app-service/pkg/infra/store"
 	"github.com/bsonger/devflow-service-common/loggingx"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
@@ -20,9 +20,6 @@ var ProjectService = NewProjectService()
 type ProjectListFilter struct {
 	IncludeDeleted bool
 	Name           string
-	Key            string
-	Namespace      string
-	Owner          string
 }
 
 type projectService struct{}
@@ -31,10 +28,9 @@ func NewProjectService() *projectService {
 	return &projectService{}
 }
 
-func (s *projectService) Create(ctx context.Context, project *model.Project) (uuid.UUID, error) {
+func (s *projectService) Create(ctx context.Context, project *domain.Project) (uuid.UUID, error) {
 	log := loggingx.LoggerWithContext(ctx).With(zap.String("operation", "create_project"))
 
-	project.ApplyDefaults()
 	labels, err := marshalLabels(project.Labels)
 	if err != nil {
 		log.Error("marshal project labels failed", zap.Error(err))
@@ -43,26 +39,26 @@ func (s *projectService) Create(ctx context.Context, project *model.Project) (uu
 
 	_, err = store.DB().ExecContext(ctx, `
 		insert into projects (
-			id, key, name, description, namespace, owner, labels, created_at, updated_at, deleted_at
-		) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
-	`, project.ID, project.Key, project.Name, project.Description, project.Namespace, project.Owner, labels, project.CreatedAt, project.UpdatedAt, project.DeletedAt)
+			id, name, description, labels, created_at, updated_at, deleted_at
+		) values ($1,$2,$3,$4,$5,$6,$7)
+	`, project.ID, project.Name, project.Description, labels, project.CreatedAt, project.UpdatedAt, project.DeletedAt)
 	if err != nil {
 		log.Error("create project failed", zap.Error(err))
 		return uuid.Nil, err
 	}
 
-	log.Info("project created", zap.String("project_id", project.GetID().String()), zap.String("project_key", project.Key))
+	log.Info("project created", zap.String("project_id", project.GetID().String()), zap.String("project_name", project.Name))
 	return project.GetID(), nil
 }
 
-func (s *projectService) Get(ctx context.Context, id uuid.UUID) (*model.Project, error) {
+func (s *projectService) Get(ctx context.Context, id uuid.UUID) (*domain.Project, error) {
 	log := loggingx.LoggerWithContext(ctx).With(
 		zap.String("operation", "get_project"),
 		zap.String("project_id", id.String()),
 	)
 
 	project, err := scanProject(store.DB().QueryRowContext(ctx, `
-		select id, key, name, description, namespace, owner, labels, created_at, updated_at, deleted_at
+		select id, name, description, labels, created_at, updated_at, deleted_at
 		from projects
 		where id = $1 and deleted_at is null
 	`, id))
@@ -71,11 +67,11 @@ func (s *projectService) Get(ctx context.Context, id uuid.UUID) (*model.Project,
 		return nil, err
 	}
 
-	log.Debug("project fetched", zap.String("project_key", project.Key))
+	log.Debug("project fetched", zap.String("project_name", project.Name))
 	return project, nil
 }
 
-func (s *projectService) Update(ctx context.Context, project *model.Project) error {
+func (s *projectService) Update(ctx context.Context, project *domain.Project) error {
 	log := loggingx.LoggerWithContext(ctx).With(
 		zap.String("operation", "update_project"),
 		zap.String("project_id", project.GetID().String()),
@@ -90,7 +86,6 @@ func (s *projectService) Update(ctx context.Context, project *model.Project) err
 	project.CreatedAt = current.CreatedAt
 	project.DeletedAt = current.DeletedAt
 	project.WithUpdateDefault()
-	project.ApplyDefaults()
 
 	labels, err := marshalLabels(project.Labels)
 	if err != nil {
@@ -99,9 +94,9 @@ func (s *projectService) Update(ctx context.Context, project *model.Project) err
 
 	result, err := store.DB().ExecContext(ctx, `
 		update projects
-		set key=$2, name=$3, description=$4, namespace=$5, owner=$6, labels=$7, updated_at=$8, deleted_at=$9
+		set name=$2, description=$3, labels=$4, updated_at=$5, deleted_at=$6
 		where id = $1 and deleted_at is null
-	`, project.ID, project.Key, project.Name, project.Description, project.Namespace, project.Owner, labels, project.UpdatedAt, project.DeletedAt)
+	`, project.ID, project.Name, project.Description, labels, project.UpdatedAt, project.DeletedAt)
 	if err != nil {
 		log.Error("update project failed", zap.Error(err))
 		return err
@@ -115,7 +110,7 @@ func (s *projectService) Update(ctx context.Context, project *model.Project) err
 		return sql.ErrNoRows
 	}
 
-	log.Info("project updated", zap.String("project_key", project.Key))
+	log.Info("project updated", zap.String("project_name", project.Name))
 	return nil
 }
 
@@ -148,18 +143,18 @@ func (s *projectService) Delete(ctx context.Context, id uuid.UUID) error {
 	return nil
 }
 
-func (s *projectService) List(ctx context.Context, filter ProjectListFilter) ([]model.Project, error) {
+func (s *projectService) List(ctx context.Context, filter ProjectListFilter) ([]domain.Project, error) {
 	log := loggingx.LoggerWithContext(ctx).With(
 		zap.String("operation", "list_projects"),
 		zap.Any("filter", filter),
 	)
 
 	query := `
-		select id, key, name, description, namespace, owner, labels, created_at, updated_at, deleted_at
+		select id, name, description, labels, created_at, updated_at, deleted_at
 		from projects
 	`
-	clauses := make([]string, 0, 5)
-	args := make([]any, 0, 5)
+	clauses := make([]string, 0, 2)
+	args := make([]any, 0, 2)
 
 	if !filter.IncludeDeleted {
 		clauses = append(clauses, "deleted_at is null")
@@ -167,18 +162,6 @@ func (s *projectService) List(ctx context.Context, filter ProjectListFilter) ([]
 	if filter.Name != "" {
 		args = append(args, filter.Name)
 		clauses = append(clauses, placeholderClause("name", len(args)))
-	}
-	if filter.Key != "" {
-		args = append(args, filter.Key)
-		clauses = append(clauses, placeholderClause("key", len(args)))
-	}
-	if filter.Namespace != "" {
-		args = append(args, filter.Namespace)
-		clauses = append(clauses, placeholderClause("namespace", len(args)))
-	}
-	if filter.Owner != "" {
-		args = append(args, filter.Owner)
-		clauses = append(clauses, placeholderClause("owner", len(args)))
 	}
 	if len(clauses) > 0 {
 		query += " where " + strings.Join(clauses, " and ")
@@ -192,7 +175,7 @@ func (s *projectService) List(ctx context.Context, filter ProjectListFilter) ([]
 	}
 	defer rows.Close()
 
-	projects := make([]model.Project, 0)
+	projects := make([]domain.Project, 0)
 	for rows.Next() {
 		project, err := scanProject(rows)
 		if err != nil {
@@ -208,7 +191,7 @@ func (s *projectService) List(ctx context.Context, filter ProjectListFilter) ([]
 	return projects, nil
 }
 
-func (s *projectService) ListApplications(ctx context.Context, projectID uuid.UUID) ([]model.Application, error) {
+func (s *projectService) ListApplications(ctx context.Context, projectID uuid.UUID) ([]domain.Application, error) {
 	if _, err := s.Get(ctx, projectID); err != nil {
 		return nil, err
 	}
@@ -218,20 +201,17 @@ func (s *projectService) ListApplications(ctx context.Context, projectID uuid.UU
 
 func scanProject(scanner interface {
 	Scan(dest ...any) error
-}) (*model.Project, error) {
+}) (*domain.Project, error) {
 	var (
-		project     model.Project
+		project     domain.Project
 		labelsBytes []byte
 		deletedAt   sql.NullTime
 	)
 
 	if err := scanner.Scan(
 		&project.ID,
-		&project.Key,
 		&project.Name,
 		&project.Description,
-		&project.Namespace,
-		&project.Owner,
 		&labelsBytes,
 		&project.CreatedAt,
 		&project.UpdatedAt,

@@ -1,11 +1,4 @@
-package model
-
-type ServiceExposure string
-
-const (
-	ExposureInternal ServiceExposure = "internal"
-	ExposureExternal ServiceExposure = "external"
-)
+package domain
 
 type ServicePort struct {
 	Name        string `json:"name"`

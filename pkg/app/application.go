@@ -1,4 +1,4 @@
-package service
+package app
 
 import (
 	"context"
@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bsonger/devflow-app-service/pkg/model"
-	"github.com/bsonger/devflow-app-service/pkg/store"
+	"github.com/bsonger/devflow-app-service/pkg/domain"
+	"github.com/bsonger/devflow-app-service/pkg/infra/store"
 	"github.com/bsonger/devflow-service-common/loggingx"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
@@ -32,7 +32,7 @@ func NewApplicationService() *applicationService {
 	return &applicationService{}
 }
 
-func (s *applicationService) Create(ctx context.Context, app *model.Application) (uuid.UUID, error) {
+func (s *applicationService) Create(ctx context.Context, app *domain.Application) (uuid.UUID, error) {
 	log := loggingx.LoggerWithContext(ctx).With(zap.String("operation", "create_application"))
 
 	if err := s.syncProjectReference(ctx, app); err != nil {
@@ -47,9 +47,9 @@ func (s *applicationService) Create(ctx context.Context, app *model.Application)
 
 	_, err = store.DB().ExecContext(ctx, `
 		insert into applications (
-			id, project_id, name, repo_address, active_manifest_id, labels, created_at, updated_at, deleted_at
-		) values ($1,$2,$3,$4,$5,$6,$7,$8,$9)
-	`, app.ID, nullableUUID(app.ProjectID), app.Name, app.RepoAddress, nullableUUIDPtr(app.ActiveManifestID), labels, app.CreatedAt, app.UpdatedAt, app.DeletedAt)
+			id, project_id, name, repo_address, description, active_manifest_id, labels, created_at, updated_at, deleted_at
+		) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+	`, app.ID, nullableUUID(app.ProjectID), app.Name, app.RepoAddress, app.Description, nullableUUIDPtr(app.ActiveManifestID), labels, app.CreatedAt, app.UpdatedAt, app.DeletedAt)
 	if err != nil {
 		log.Error("create application failed", zap.Error(err))
 		return uuid.Nil, err
@@ -59,14 +59,14 @@ func (s *applicationService) Create(ctx context.Context, app *model.Application)
 	return app.GetID(), nil
 }
 
-func (s *applicationService) Get(ctx context.Context, id uuid.UUID) (*model.Application, error) {
+func (s *applicationService) Get(ctx context.Context, id uuid.UUID) (*domain.Application, error) {
 	log := loggingx.LoggerWithContext(ctx).With(
 		zap.String("operation", "get_application"),
 		zap.String("application_id", id.String()),
 	)
 
 	app, err := scanApplication(store.DB().QueryRowContext(ctx, `
-		select id, project_id, name, repo_address, active_manifest_id, labels, created_at, updated_at, deleted_at
+		select id, project_id, name, repo_address, description, active_manifest_id, labels, created_at, updated_at, deleted_at
 		from applications
 		where id = $1 and deleted_at is null
 	`, id))
@@ -79,7 +79,7 @@ func (s *applicationService) Get(ctx context.Context, id uuid.UUID) (*model.Appl
 	return app, nil
 }
 
-func (s *applicationService) Update(ctx context.Context, app *model.Application) error {
+func (s *applicationService) Update(ctx context.Context, app *domain.Application) error {
 	log := loggingx.LoggerWithContext(ctx).With(
 		zap.String("operation", "update_application"),
 		zap.String("application_id", app.GetID().String()),
@@ -106,9 +106,9 @@ func (s *applicationService) Update(ctx context.Context, app *model.Application)
 
 	result, err := store.DB().ExecContext(ctx, `
 		update applications
-		set project_id=$2, name=$3, repo_address=$4, active_manifest_id=$5, labels=$6, updated_at=$7, deleted_at=$8
+		set project_id=$2, name=$3, repo_address=$4, description=$5, active_manifest_id=$6, labels=$7, updated_at=$8, deleted_at=$9
 		where id = $1 and deleted_at is null
-	`, app.ID, nullableUUID(app.ProjectID), app.Name, app.RepoAddress, nullableUUIDPtr(app.ActiveManifestID), labels, app.UpdatedAt, app.DeletedAt)
+	`, app.ID, nullableUUID(app.ProjectID), app.Name, app.RepoAddress, app.Description, nullableUUIDPtr(app.ActiveManifestID), labels, app.UpdatedAt, app.DeletedAt)
 	if err != nil {
 		log.Error("update application failed", zap.Error(err))
 		return err
@@ -183,14 +183,14 @@ func (s *applicationService) UpdateActiveManifest(ctx context.Context, appID, ma
 	return nil
 }
 
-func (s *applicationService) List(ctx context.Context, filter ApplicationListFilter) ([]model.Application, error) {
+func (s *applicationService) List(ctx context.Context, filter ApplicationListFilter) ([]domain.Application, error) {
 	log := loggingx.LoggerWithContext(ctx).With(
 		zap.String("operation", "list_applications"),
 		zap.Any("filter", filter),
 	)
 
 	query := `
-		select id, project_id, name, repo_address, active_manifest_id, labels, created_at, updated_at, deleted_at
+		select id, project_id, name, repo_address, description, active_manifest_id, labels, created_at, updated_at, deleted_at
 		from applications
 	`
 	clauses := make([]string, 0, 4)
@@ -223,7 +223,7 @@ func (s *applicationService) List(ctx context.Context, filter ApplicationListFil
 	}
 	defer rows.Close()
 
-	apps := make([]model.Application, 0)
+	apps := make([]domain.Application, 0)
 	for rows.Next() {
 		app, err := scanApplication(rows)
 		if err != nil {
@@ -239,7 +239,7 @@ func (s *applicationService) List(ctx context.Context, filter ApplicationListFil
 	return apps, nil
 }
 
-func (s *applicationService) syncProjectReference(ctx context.Context, app *model.Application) error {
+func (s *applicationService) syncProjectReference(ctx context.Context, app *domain.Application) error {
 	if app.ProjectID == uuid.Nil {
 		return nil
 	}
@@ -255,9 +255,9 @@ func (s *applicationService) syncProjectReference(ctx context.Context, app *mode
 
 func scanApplication(scanner interface {
 	Scan(dest ...any) error
-}) (*model.Application, error) {
+}) (*domain.Application, error) {
 	var (
-		app              model.Application
+		app              domain.Application
 		projectID        sql.NullString
 		activeManifestID sql.NullString
 		labelsBytes      []byte
@@ -269,6 +269,7 @@ func scanApplication(scanner interface {
 		&projectID,
 		&app.Name,
 		&app.RepoAddress,
+		&app.Description,
 		&activeManifestID,
 		&labelsBytes,
 		&app.CreatedAt,

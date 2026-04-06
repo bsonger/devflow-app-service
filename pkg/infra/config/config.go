@@ -4,18 +4,18 @@ import (
 	"context"
 	"database/sql"
 
-	"github.com/bsonger/devflow-app-service/pkg/model"
-	"github.com/bsonger/devflow-app-service/pkg/store"
+	"github.com/bsonger/devflow-app-service/pkg/domain"
+	"github.com/bsonger/devflow-app-service/pkg/infra/store"
 	"github.com/bsonger/devflow-service-common/observability"
 	"github.com/spf13/viper"
 )
 
 type Config struct {
-	Server    *model.ServerConfig   `mapstructure:"server" json:"server" yaml:"server"`
-	Postgres  *model.PostgresConfig `mapstructure:"postgres" json:"postgres" yaml:"postgres"`
-	Log       *model.LogConfig      `mapstructure:"log" json:"log" yaml:"log"`
-	Otel      *model.OtelConfig     `mapstructure:"otel" json:"otel" yaml:"otel"`
-	Pyroscope string                `mapstructure:"pyroscope" json:"pyroscope" yaml:"pyroscope"`
+	Server    *domain.ServerConfig   `mapstructure:"server" json:"server" yaml:"server"`
+	Postgres  *domain.PostgresConfig `mapstructure:"postgres" json:"postgres" yaml:"postgres"`
+	Log       *domain.LogConfig      `mapstructure:"log" json:"log" yaml:"log"`
+	Otel      *domain.OtelConfig     `mapstructure:"otel" json:"otel" yaml:"otel"`
+	Pyroscope string                 `mapstructure:"pyroscope" json:"pyroscope" yaml:"pyroscope"`
 }
 
 func Load() (*Config, error) {
@@ -43,10 +43,10 @@ func InitConfig(ctx context.Context, config *Config) error {
 
 func InitRuntime(ctx context.Context, config *Config, serviceName string) (func(context.Context) error, error) {
 	shutdown, err := observability.Init(ctx, observability.RuntimeOptions{
-		LogLevel:        stringValue(config.Log, func(v *model.LogConfig) string { return v.Level }),
-		LogFormat:       stringValue(config.Log, func(v *model.LogConfig) string { return v.Format }),
-		OtelEndpoint:    stringValue(config.Otel, func(v *model.OtelConfig) string { return v.Endpoint }),
-		OtelService:     stringValue(config.Otel, func(v *model.OtelConfig) string { return v.ServiceName }),
+		LogLevel:        stringValue(config.Log, func(v *domain.LogConfig) string { return v.Level }),
+		LogFormat:       stringValue(config.Log, func(v *domain.LogConfig) string { return v.Format }),
+		OtelEndpoint:    stringValue(config.Otel, func(v *domain.OtelConfig) string { return v.Endpoint }),
+		OtelService:     stringValue(config.Otel, func(v *domain.OtelConfig) string { return v.ServiceName }),
 		PyroscopeAddr:   configValue(config, func(v *Config) string { return v.Pyroscope }),
 		ServiceOverride: serviceName,
 	})
@@ -54,14 +54,14 @@ func InitRuntime(ctx context.Context, config *Config, serviceName string) (func(
 		return nil, err
 	}
 
-	db, err := sql.Open("pgx", stringValue(config.Postgres, func(v *model.PostgresConfig) string { return v.DSN }))
+	db, err := sql.Open("pgx", stringValue(config.Postgres, func(v *domain.PostgresConfig) string { return v.DSN }))
 	if err != nil {
 		return shutdown, err
 	}
 	store.ApplyPool(db,
-		intValue(config.Postgres, func(v *model.PostgresConfig) int { return v.MaxOpenConns }),
-		intValue(config.Postgres, func(v *model.PostgresConfig) int { return v.MaxIdleConns }),
-		intValue(config.Postgres, func(v *model.PostgresConfig) int { return v.ConnMaxLifetimeMinutes }),
+		intValue(config.Postgres, func(v *domain.PostgresConfig) int { return v.MaxOpenConns }),
+		intValue(config.Postgres, func(v *domain.PostgresConfig) int { return v.MaxIdleConns }),
+		intValue(config.Postgres, func(v *domain.PostgresConfig) int { return v.ConnMaxLifetimeMinutes }),
 	)
 	if err := db.PingContext(ctx); err != nil {
 		_ = db.Close()

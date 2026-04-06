@@ -3,7 +3,7 @@
 ## Ownership
 
 - owner repo: `devflow-app-service`
-- authoritative model file: `pkg/model/project.go`
+- authoritative model file: `pkg/domain/project.go`
 - authoritative API doc: `docs/api-spec.md`
 - swagger source: `docs/generated/swagger/swagger.yaml`
 
@@ -25,30 +25,22 @@
 | Field | Type | Required | Writable | Description |
 |---|---|---|---|---|
 | `name` | `string` | expected on create | user | 项目名 |
-| `key` | `string` | expected on create | user | 项目标识 |
 | `description` | `string` | optional | user | 项目描述 |
-| `namespace` | `string` | optional | user | 命名空间；为空时默认等于 `name` |
-| `owner` | `string` | optional | user | 负责人 |
 | `labels` | `map[string]string` | optional | user | 扩展标签 |
 
 ## Create / update rules
 
 ### Create
-- current API behavior:
-  - handler 会绑定整个 `model.Project`
-  - 当前未做额外字段级 `binding:"required"` 校验
 - practical required fields:
   - `name`
-  - `key`
 - server-managed fields:
   - `id`
   - `created_at`
   - `updated_at`
-  - `namespace` 默认值
 
 ### Update
 - mutable fields:
-  - `name`, `key`, `description`, `namespace`, `owner`, `labels`
+  - `name`, `description`, `labels`
 - immutable/system-managed fields:
   - `id`, `created_at`, `deleted_at`
 
@@ -62,5 +54,5 @@
 
 - router: `pkg/router/project.go`
 - handler: `pkg/api/project.go`
-- service: `pkg/service/project.go`
-- model: `pkg/model/project.go`
+- service: `pkg/app/project.go`
+- model: `pkg/domain/project.go`

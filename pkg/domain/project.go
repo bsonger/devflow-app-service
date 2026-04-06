@@ -1,20 +1,11 @@
-package model
+package domain
 
 type Project struct {
 	BaseModel
 
 	Name        string            `json:"name" db:"name"`
-	Key         string            `json:"key" db:"key"`
 	Description string            `json:"description,omitempty" db:"description"`
-	Namespace   string            `json:"namespace,omitempty" db:"namespace"`
-	Owner       string            `json:"owner,omitempty" db:"owner"`
 	Labels      map[string]string `json:"labels,omitempty" db:"labels"`
-}
-
-func (p *Project) ApplyDefaults() {
-	if p.Namespace == "" {
-		p.Namespace = p.Name
-	}
 }
 
 func (Project) CollectionName() string { return "projects" }

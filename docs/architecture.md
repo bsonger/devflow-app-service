@@ -5,31 +5,32 @@
 `devflow-app-service` is the metadata owner for:
 
 - `Project`
+- `Environment`
 - `Application`
 - `ServiceResource`
 
-It provides project/application relationships, application repository identity, service-exposure metadata, and the narrow `active_manifest` binding.
+It provides project/environment/application relationships, application repository identity, static service metadata, and the narrow `active_manifest` binding.
 
 ## Architecture Style
 
 This repo uses a **layered metadata-service backend**:
 
 ```text
-router -> api -> service -> store
-                    \-> model
+router -> api -> app -> infra/store
+                \-> domain
 ```
 
 Where:
 - `api` binds HTTP requests and maps status codes
-- `service` owns metadata rules and cross-resource checks
-- `store` persists repo-owned metadata
+- `app` owns metadata rules and cross-resource checks
+- `infra/store` persists repo-owned metadata
 
 The converged target resource model is:
 
 - `Project` 1 -> N `Application`
 - `Application` 1 -> N `ServiceResource`
 - `Application.repo_address` is the unified repository locator
-- `ServiceResource` stores `internet` and `ports`
+- `ServiceResource` stores `description`, `labels`, and `ports`
 
 ## Request Flow
 
@@ -46,7 +47,7 @@ Client
 
 - `cmd/main.go`
   - process entrypoint only
-- `pkg/config`
+- `pkg/infra/config`
   - config loading
   - runtime initialization
 - `pkg/router`
@@ -54,12 +55,12 @@ Client
   - middleware wiring
 - `pkg/api`
   - project/application/service-resource handlers
-- `pkg/service`
+- `pkg/app`
   - metadata behavior
   - `active_manifest` binding rules
-- `pkg/store`
+- `pkg/infra/store`
   - repo-owned metadata persistence
-- `pkg/model`
+- `pkg/domain`
   - `Project`, `Application`, `ServiceResource`
 
 ## External Dependencies
