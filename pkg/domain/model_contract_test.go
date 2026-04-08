@@ -10,7 +10,7 @@ import (
 func TestApplicationContract(t *testing.T) {
 	typ := reflect.TypeOf(Application{})
 
-	for _, field := range []string{"ProjectID", "Name", "RepoAddress", "Description", "ActiveManifestID", "Labels"} {
+	for _, field := range []string{"ProjectID", "Name", "RepoAddress", "Description", "ActiveImageID", "Labels"} {
 		f, ok := typ.FieldByName(field)
 		if !ok {
 			t.Fatalf("Application missing field %s", field)

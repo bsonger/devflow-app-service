@@ -6,7 +6,7 @@ Repo-local boundary summary:
 
 - this repository is `devflow-app-service`
 - public surface is `Project` and `Application`
-- `Application.active_manifest` writeback stays within the application boundary
+- `Application.active_image` writeback stays within the application boundary
 
 Authoritative boundary and resource semantics:
 

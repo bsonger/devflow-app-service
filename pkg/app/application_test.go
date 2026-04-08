@@ -14,7 +14,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func TestUpdateActiveManifestUpdatesApplicationWithoutManifestLookup(t *testing.T) {
+func TestUpdateActiveImageUpdatesApplicationWithoutImageLookup(t *testing.T) {
 	loggingx.Logger = zap.NewNop()
 
 	stub := &sqlDriverStub{
@@ -24,9 +24,9 @@ func TestUpdateActiveManifestUpdatesApplicationWithoutManifestLookup(t *testing.
 	db := openSQLStub(t, stub)
 	store.InitPostgres(db)
 
-	err := NewApplicationService().UpdateActiveManifest(context.Background(), uuid.New(), uuid.New())
+	err := NewApplicationService().UpdateActiveImage(context.Background(), uuid.New(), uuid.New())
 	if err != nil {
-		t.Fatalf("UpdateActiveManifest returned error: %v", err)
+		t.Fatalf("UpdateActiveImage returned error: %v", err)
 	}
 
 	if len(stub.execs) != 1 {
@@ -37,7 +37,7 @@ func TestUpdateActiveManifestUpdatesApplicationWithoutManifestLookup(t *testing.
 	}
 }
 
-func TestUpdateActiveManifestReturnsNotFoundWhenApplicationMissing(t *testing.T) {
+func TestUpdateActiveImageReturnsNotFoundWhenApplicationMissing(t *testing.T) {
 	loggingx.Logger = zap.NewNop()
 
 	stub := &sqlDriverStub{
@@ -47,9 +47,9 @@ func TestUpdateActiveManifestReturnsNotFoundWhenApplicationMissing(t *testing.T)
 	db := openSQLStub(t, stub)
 	store.InitPostgres(db)
 
-	err := NewApplicationService().UpdateActiveManifest(context.Background(), uuid.New(), uuid.New())
+	err := NewApplicationService().UpdateActiveImage(context.Background(), uuid.New(), uuid.New())
 	if err == nil {
-		t.Fatal("UpdateActiveManifest should fail when no application row was updated")
+		t.Fatal("UpdateActiveImage should fail when no application row was updated")
 	}
 }
 

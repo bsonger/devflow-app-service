@@ -9,7 +9,7 @@
 - `Application`
 - `ServiceResource`
 
-It provides project/environment/application relationships, application repository identity, static service metadata, and the narrow `active_manifest` binding.
+It provides project/environment/application relationships, application repository identity, static service metadata, and the narrow `active_image` binding.
 
 ## Architecture Style
 
@@ -57,7 +57,7 @@ Client
   - project/application/service-resource handlers
 - `pkg/app`
   - metadata behavior
-  - `active_manifest` binding rules
+  - `active_image` binding rules
 - `pkg/infra/store`
   - repo-owned metadata persistence
 - `pkg/domain`

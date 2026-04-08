@@ -4,7 +4,7 @@
 
 - `Project` 是顶层空间资源
 - `Application` 归属于 `Project`
-- `Application.active_manifest` 只能引用应用当前活动版本
+- `Application.active_image` 只能引用应用当前活动版本
 
 ## 边界约束
 
@@ -16,7 +16,7 @@
 
 - 删除应遵守仓库既有软删除语义
 - 对外返回的列表与详情必须遵守软删除过滤规则
-- `active_manifest` 的更新必须保持幂等
+- `active_image` 的更新必须保持幂等
 
 ## 跨服务调用
 

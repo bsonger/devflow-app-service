@@ -15,7 +15,7 @@ This repo follows the shared telemetry contract implemented in `devflow-service-
 
 - `project`
 - `application`
-- `active_manifest`
+- `active_image`
 
 Recommended structured fields:
 

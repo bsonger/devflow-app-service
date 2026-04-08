@@ -20,7 +20,7 @@ type applicationService interface {
 	Get(ctx context.Context, id uuid.UUID) (*domain.Application, error)
 	Update(ctx context.Context, application *domain.Application) error
 	Delete(ctx context.Context, id uuid.UUID) error
-	UpdateActiveManifest(ctx context.Context, appID, manifestID uuid.UUID) error
+	UpdateActiveImage(ctx context.Context, appID, imageID uuid.UUID) error
 	List(ctx context.Context, filter app.ApplicationListFilter) ([]domain.Application, error)
 }
 
@@ -47,12 +47,12 @@ type UpdateApplicationRequest struct {
 	Name             string             `json:"name"`
 	RepoAddress      string             `json:"repo_address"`
 	Description      string             `json:"description,omitempty"`
-	ActiveManifestID *uuid.UUID         `json:"active_manifest_id,omitempty"`
+	ActiveImageID    *uuid.UUID         `json:"active_image_id,omitempty"`
 	Labels           []domain.LabelItem `json:"labels,omitempty"`
 }
 
-type UpdateActiveManifestRequest struct {
-	ManifestID string `json:"manifest_id" binding:"required"`
+type UpdateActiveImageRequest struct {
+	ImageID string `json:"image_id" binding:"required"`
 }
 
 // Create
@@ -142,7 +142,7 @@ func (h *ApplicationHandler) Update(c *gin.Context) {
 		Name:             req.Name,
 		RepoAddress:      req.RepoAddress,
 		Description:      req.Description,
-		ActiveManifestID: req.ActiveManifestID,
+		ActiveImageID:    req.ActiveImageID,
 		Labels:           req.Labels,
 	}
 	application.SetID(id)
@@ -188,33 +188,33 @@ func (h *ApplicationHandler) Delete(c *gin.Context) {
 	httpx.WriteNoContent(c)
 }
 
-// UpdateActiveManifest
-// @Summary	更新应用的 Active Manifest
+// UpdateActiveImage
+// @Summary	更新应用的 Active Image
 // @Tags		Application
 // @Param		id	path		string	true	"Application ID"
-// @Param		data	body		UpdateActiveManifestRequest	true	"Active Manifest Data"
+// @Param		data	body		UpdateActiveImageRequest	true	"Active Image Data"
 // @Success	204
-// @Router		/api/v1/applications/{id}/active_manifest [patch]
-func (h *ApplicationHandler) UpdateActiveManifest(c *gin.Context) {
+// @Router		/api/v1/applications/{id}/active_image [patch]
+func (h *ApplicationHandler) UpdateActiveImage(c *gin.Context) {
 	appID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
 		httpx.WriteError(c, http.StatusBadRequest, "invalid_argument", "invalid id", nil)
 		return
 	}
 
-	var req UpdateActiveManifestRequest
+	var req UpdateActiveImageRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		httpx.WriteError(c, http.StatusBadRequest, "invalid_argument", err.Error(), nil)
 		return
 	}
 
-	manifestID, err := uuid.Parse(req.ManifestID)
+	imageID, err := uuid.Parse(req.ImageID)
 	if err != nil {
-		httpx.WriteError(c, http.StatusBadRequest, "invalid_argument", "invalid manifest_id", nil)
+		httpx.WriteError(c, http.StatusBadRequest, "invalid_argument", "invalid image_id", nil)
 		return
 	}
 
-	if err := h.svc.UpdateActiveManifest(c.Request.Context(), appID, manifestID); err != nil {
+	if err := h.svc.UpdateActiveImage(c.Request.Context(), appID, imageID); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			httpx.WriteError(c, http.StatusNotFound, "not_found", "not found", nil)
 			return

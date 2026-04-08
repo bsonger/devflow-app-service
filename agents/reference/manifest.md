@@ -16,7 +16,7 @@ This file must not define manifest semantics.
   - `Failed`
 - `steps` 记录各任务步骤的执行状态与时间戳
 - 当前确认的创建链路：
-  - `pkg/api/manifest.go` 通过 `POST /api/v1/manifests` 调用 `ManifestService.CreateManifest`
+  - `pkg/api/image.go` 通过 `POST /api/v1/images` 调用 `ManifestService.CreateManifest`
   - `intent` 模式下，先落库 Manifest，再创建 build intent，并返回 `execution_intent_id`
   - `direct` 模式下，直接提交 Tekton PipelineRun，再把 `pipeline_id`、`steps` 等元数据写回 Manifest
 

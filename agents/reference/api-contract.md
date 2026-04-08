@@ -6,7 +6,7 @@
 
 - `Project`
 - `Application`
-- `Application.active_manifest`
+- `Application.active_image`
 
 禁止出现：
 

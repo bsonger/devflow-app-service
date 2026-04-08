@@ -1,10 +1,10 @@
 definitions:
   api.UpdateActiveManifestRequest:
     properties:
-      manifest_id:
+      image_id:
         type: string
     required:
-    - manifest_id
+    - image_id
     type: object
   httpx.CreateResponse:
     properties:
@@ -15,9 +15,9 @@ definitions:
     type: object
   model.Application:
     properties:
-      active_manifest_id:
+      active_image_id:
         type: string
-      active_manifest_name:
+      active_image_name:
         type: string
       config_maps:
         items:
@@ -235,7 +235,7 @@ paths:
       summary: 更新应用
       tags:
       - Application
-  /api/v1/applications/{id}/active_manifest:
+  /api/v1/applications/{id}/active_image:
     patch:
       parameters:
       - description: Application ID
@@ -243,7 +243,7 @@ paths:
         name: id
         required: true
         type: string
-      - description: Active Manifest Data
+      - description: Active Image Data
         in: body
         name: data
         required: true
@@ -256,7 +256,7 @@ paths:
             additionalProperties:
               type: string
             type: object
-      summary: 更新应用的 Active Manifest
+      summary: 更新应用的 Active Image
       tags:
       - Application
   /api/v1/projects:

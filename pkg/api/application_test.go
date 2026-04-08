@@ -16,12 +16,12 @@ import (
 )
 
 type stubApplicationService struct {
-	createFn               func(context.Context, *domain.Application) (uuid.UUID, error)
-	getFn                  func(context.Context, uuid.UUID) (*domain.Application, error)
-	updateFn               func(context.Context, *domain.Application) error
-	deleteFn               func(context.Context, uuid.UUID) error
-	updateActiveManifestFn func(context.Context, uuid.UUID, uuid.UUID) error
-	listFn                 func(context.Context, app.ApplicationListFilter) ([]domain.Application, error)
+	createFn             func(context.Context, *domain.Application) (uuid.UUID, error)
+	getFn                func(context.Context, uuid.UUID) (*domain.Application, error)
+	updateFn             func(context.Context, *domain.Application) error
+	deleteFn             func(context.Context, uuid.UUID) error
+	updateActiveImageFn  func(context.Context, uuid.UUID, uuid.UUID) error
+	listFn               func(context.Context, app.ApplicationListFilter) ([]domain.Application, error)
 }
 
 func (s stubApplicationService) Create(ctx context.Context, app *domain.Application) (uuid.UUID, error) {
@@ -36,8 +36,8 @@ func (s stubApplicationService) Update(ctx context.Context, app *domain.Applicat
 func (s stubApplicationService) Delete(ctx context.Context, id uuid.UUID) error {
 	return s.deleteFn(ctx, id)
 }
-func (s stubApplicationService) UpdateActiveManifest(ctx context.Context, appID, manifestID uuid.UUID) error {
-	return s.updateActiveManifestFn(ctx, appID, manifestID)
+func (s stubApplicationService) UpdateActiveImage(ctx context.Context, appID, imageID uuid.UUID) error {
+	return s.updateActiveImageFn(ctx, appID, imageID)
 }
 func (s stubApplicationService) List(ctx context.Context, filter app.ApplicationListFilter) ([]domain.Application, error) {
 	return s.listFn(ctx, filter)
@@ -107,15 +107,15 @@ func TestListApplicationsReturnsEnvelope(t *testing.T) {
 	}
 }
 
-func TestUpdateActiveManifestReturnsNoContent(t *testing.T) {
+func TestUpdateActiveImageReturnsNoContent(t *testing.T) {
 	gin.SetMode(gin.ReleaseMode)
-	handler := &ApplicationHandler{svc: stubApplicationService{updateActiveManifestFn: func(_ context.Context, _, _ uuid.UUID) error { return nil }}}
+	handler := &ApplicationHandler{svc: stubApplicationService{updateActiveImageFn: func(_ context.Context, _, _ uuid.UUID) error { return nil }}}
 
 	r := gin.New()
-	r.PATCH("/api/v1/applications/:id/active_manifest", handler.UpdateActiveManifest)
+	r.PATCH("/api/v1/applications/:id/active_image", handler.UpdateActiveImage)
 
-	body := bytes.NewBufferString(`{"manifest_id":"22222222-2222-2222-2222-222222222222"}`)
-	req := httptest.NewRequest(http.MethodPatch, "/api/v1/applications/"+uuid.New().String()+"/active_manifest", body)
+	body := bytes.NewBufferString(`{"image_id":"22222222-2222-2222-2222-222222222222"}`)
+	req := httptest.NewRequest(http.MethodPatch, "/api/v1/applications/"+uuid.New().String()+"/active_image", body)
 	req.Header.Set("Content-Type", "application/json")
 	rec := httptest.NewRecorder()
 

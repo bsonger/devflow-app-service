@@ -46,9 +46,9 @@ func (s *applicationService) Create(ctx context.Context, app *domain.Application
 
 	_, err = store.DB().ExecContext(ctx, `
 		insert into applications (
-			id, project_id, name, repo_address, description, active_manifest_id, labels, created_at, updated_at, deleted_at
+			id, project_id, name, repo_address, description, active_image_id, labels, created_at, updated_at, deleted_at
 		) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
-	`, app.ID, nullableUUID(app.ProjectID), app.Name, app.RepoAddress, app.Description, nullableUUIDPtr(app.ActiveManifestID), labels, app.CreatedAt, app.UpdatedAt, app.DeletedAt)
+	`, app.ID, nullableUUID(app.ProjectID), app.Name, app.RepoAddress, app.Description, nullableUUIDPtr(app.ActiveImageID), labels, app.CreatedAt, app.UpdatedAt, app.DeletedAt)
 	if err != nil {
 		log.Error("create application failed", zap.Error(err))
 		return uuid.Nil, err
@@ -65,7 +65,7 @@ func (s *applicationService) Get(ctx context.Context, id uuid.UUID) (*domain.App
 	)
 
 	app, err := scanApplication(store.DB().QueryRowContext(ctx, `
-		select id, project_id, name, repo_address, description, active_manifest_id, labels, created_at, updated_at, deleted_at
+		select id, project_id, name, repo_address, description, active_image_id, labels, created_at, updated_at, deleted_at
 		from applications
 		where id = $1 and deleted_at is null
 	`, id))
@@ -105,9 +105,9 @@ func (s *applicationService) Update(ctx context.Context, app *domain.Application
 
 	result, err := store.DB().ExecContext(ctx, `
 		update applications
-		set project_id=$2, name=$3, repo_address=$4, description=$5, active_manifest_id=$6, labels=$7, updated_at=$8, deleted_at=$9
+		set project_id=$2, name=$3, repo_address=$4, description=$5, active_image_id=$6, labels=$7, updated_at=$8, deleted_at=$9
 		where id = $1 and deleted_at is null
-	`, app.ID, nullableUUID(app.ProjectID), app.Name, app.RepoAddress, app.Description, nullableUUIDPtr(app.ActiveManifestID), labels, app.UpdatedAt, app.DeletedAt)
+	`, app.ID, nullableUUID(app.ProjectID), app.Name, app.RepoAddress, app.Description, nullableUUIDPtr(app.ActiveImageID), labels, app.UpdatedAt, app.DeletedAt)
 	if err != nil {
 		log.Error("update application failed", zap.Error(err))
 		return err
@@ -154,20 +154,20 @@ func (s *applicationService) Delete(ctx context.Context, id uuid.UUID) error {
 	return nil
 }
 
-func (s *applicationService) UpdateActiveManifest(ctx context.Context, appID, manifestID uuid.UUID) error {
+func (s *applicationService) UpdateActiveImage(ctx context.Context, appID, imageID uuid.UUID) error {
 	log := loggingx.LoggerWithContext(ctx).With(
-		zap.String("operation", "update_application_active_manifest"),
+		zap.String("operation", "update_application_active_image"),
 		zap.String("application_id", appID.String()),
-		zap.String("manifest_id", manifestID.String()),
+		zap.String("image_id", imageID.String()),
 	)
 
 	result, err := store.DB().ExecContext(ctx, `
 		update applications
-		set active_manifest_id=$2, updated_at=$3
+		set active_image_id=$2, updated_at=$3
 		where id = $1 and deleted_at is null
-	`, appID, manifestID, time.Now())
+	`, appID, imageID, time.Now())
 	if err != nil {
-		log.Error("update active manifest failed", zap.Error(err))
+		log.Error("update active image failed", zap.Error(err))
 		return err
 	}
 
@@ -189,7 +189,7 @@ func (s *applicationService) List(ctx context.Context, filter ApplicationListFil
 	)
 
 	query := `
-		select id, project_id, name, repo_address, description, active_manifest_id, labels, created_at, updated_at, deleted_at
+		select id, project_id, name, repo_address, description, active_image_id, labels, created_at, updated_at, deleted_at
 		from applications
 	`
 	clauses := make([]string, 0, 4)
@@ -258,7 +258,7 @@ func scanApplication(scanner interface {
 	var (
 		app              domain.Application
 		projectID        sql.NullString
-		activeManifestID sql.NullString
+		activeImageID sql.NullString
 		labelsBytes      []byte
 		deletedAt        sql.NullTime
 	)
@@ -269,7 +269,7 @@ func scanApplication(scanner interface {
 		&app.Name,
 		&app.RepoAddress,
 		&app.Description,
-		&activeManifestID,
+		&activeImageID,
 		&labelsBytes,
 		&app.CreatedAt,
 		&app.UpdatedAt,
@@ -285,12 +285,12 @@ func scanApplication(scanner interface {
 		}
 		app.ProjectID = parsed
 	}
-	if activeManifestID.Valid {
-		parsed, err := uuid.Parse(activeManifestID.String)
+	if activeImageID.Valid {
+		parsed, err := uuid.Parse(activeImageID.String)
 		if err != nil {
 			return nil, err
 		}
-		app.ActiveManifestID = &parsed
+		app.ActiveImageID = &parsed
 	}
 	if deletedAt.Valid {
 		app.DeletedAt = &deletedAt.Time

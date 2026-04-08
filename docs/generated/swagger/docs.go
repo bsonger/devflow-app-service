@@ -152,12 +152,12 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/applications/{id}/active_manifest": {
+        "/api/v1/applications/{id}/active_image": {
             "patch": {
                 "tags": [
                     "Application"
                 ],
-                "summary": "更新应用的 Active Manifest",
+                "summary": "更新应用的 Active Image",
                 "parameters": [
                     {
                         "type": "string",
@@ -167,7 +167,7 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "description": "Active Manifest Data",
+                        "description": "Active Image Data",
                         "name": "data",
                         "in": "body",
                         "required": true,
@@ -359,10 +359,10 @@ const docTemplate = `{
         "api.UpdateActiveManifestRequest": {
             "type": "object",
             "required": [
-                "manifest_id"
+                "image_id"
             ],
             "properties": {
-                "manifest_id": {
+                "image_id": {
                     "type": "string"
                 }
             }
@@ -381,10 +381,10 @@ const docTemplate = `{
         "model.Application": {
             "type": "object",
             "properties": {
-                "active_manifest_id": {
+                "active_image_id": {
                     "type": "string"
                 },
-                "active_manifest_name": {
+                "active_image_name": {
                     "type": "string"
                 },
                 "config_maps": {

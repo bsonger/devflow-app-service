@@ -38,7 +38,7 @@
   - `GET /api/v1/applications/:id`
   - `PUT /api/v1/applications/:id`
   - `DELETE /api/v1/applications/:id`
-  - `PATCH /api/v1/applications/:id/active_manifest`
+  - `PATCH /api/v1/applications/:id/active_image`
   - 所有对 PostgreSQL 和其他外部系统的出站调用
 - span 名称必须稳定，业务 ID 放入 span attribute 而不是 span 名称
 - 错误必须记录为 span status 和 error event
@@ -54,7 +54,7 @@
   - `trace_id`
   - `span_id`
   - `request_id`
-- 涉及控制面资源时，日志追加 `project_id`、`application_id`、`active_manifest_id`
+- 涉及控制面资源时，日志追加 `project_id`、`application_id`、`active_image_id`
 
 ## Must Not
 

@@ -7,7 +7,7 @@
 - `Project`
 - `Application`
 
-It also owns the narrow `Application.active_manifest` binding endpoint.
+It also owns the narrow `Application.active_image` binding endpoint.
 
 ## Endpoint Groups
 
@@ -25,16 +25,16 @@ It also owns the narrow `Application.active_manifest` binding endpoint.
 - `GET /api/v1/applications/{id}`
 - `PUT /api/v1/applications/{id}`
 - `DELETE /api/v1/applications/{id}`
-- `PATCH /api/v1/applications/{id}/active_manifest`
+- `PATCH /api/v1/applications/{id}/active_image`
 
 ## Request Rules
 
 - all list endpoints use `page` and `page_size`
-- `PATCH /api/v1/applications/{id}/active_manifest` requires `manifest_id`
-- `active_manifest` only represents the currently bound manifest, not build/release orchestration state
-- `Application` owns stable app metadata such as `project_id`, `name`, `repo_address`, `labels`, and `active_manifest_id`
+- `PATCH /api/v1/applications/{id}/active_image` requires `image_id`
+- `active_image` only represents the currently bound image, not build/release orchestration state
+- `Application` owns stable app metadata such as `project_id`, `name`, `repo_address`, `labels`, and `active_image_id`
 - app-service does not own environment variables or environment-specific deployment state
-- app-service does not own manifests, releases, configuration revisions, or verification records
+- app-service does not own images, releases, configuration revisions, or verification records
 
 ## Response Rules
 
