@@ -14,10 +14,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/model.Application"
-                            }
+                            "$ref": "#/definitions/httpx.ListResponse-github_com_bsonger_devflow-app-service_pkg_domain_Application"
                         }
                     }
                 }
@@ -41,15 +38,15 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.Application"
+                            "$ref": "#/definitions/pkg_api.CreateApplicationRequest"
                         }
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "OK",
+                    "201": {
+                        "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/httpx.CreateResponse"
+                            "$ref": "#/definitions/httpx.DataResponse-github_com_bsonger_devflow-app-service_pkg_domain_Application"
                         }
                     }
                 }
@@ -74,7 +71,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.Application"
+                            "$ref": "#/definitions/httpx.DataResponse-github_com_bsonger_devflow-app-service_pkg_domain_Application"
                         }
                     }
                 }
@@ -98,19 +95,13 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.Application"
+                            "$ref": "#/definitions/pkg_api.UpdateApplicationRequest"
                         }
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
+                    "204": {
+                        "description": "No Content"
                     }
                 }
             },
@@ -129,14 +120,8 @@
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
+                    "204": {
+                        "description": "No Content"
                     }
                 }
             }
@@ -161,19 +146,13 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.UpdateActiveManifestRequest"
+                            "$ref": "#/definitions/pkg_api.UpdateActiveImageRequest"
                         }
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
+                    "204": {
+                        "description": "No Content"
                     }
                 }
             }
@@ -188,10 +167,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/model.Project"
-                            }
+                            "$ref": "#/definitions/httpx.ListResponse-github_com_bsonger_devflow-app-service_pkg_domain_Project"
                         }
                     }
                 }
@@ -215,15 +191,15 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.Project"
+                            "$ref": "#/definitions/pkg_api.CreateProjectRequest"
                         }
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "OK",
+                    "201": {
+                        "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/httpx.CreateResponse"
+                            "$ref": "#/definitions/httpx.DataResponse-github_com_bsonger_devflow-app-service_pkg_domain_Project"
                         }
                     }
                 }
@@ -248,7 +224,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.Project"
+                            "$ref": "#/definitions/httpx.DataResponse-github_com_bsonger_devflow-app-service_pkg_domain_Project"
                         }
                     }
                 }
@@ -272,19 +248,13 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.Project"
+                            "$ref": "#/definitions/pkg_api.UpdateProjectRequest"
                         }
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
+                    "204": {
+                        "description": "No Content"
                     }
                 }
             },
@@ -303,14 +273,8 @@
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
+                    "204": {
+                        "description": "No Content"
                     }
                 }
             }
@@ -334,10 +298,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/model.Application"
-                            }
+                            "$ref": "#/definitions/httpx.ListResponse-github_com_bsonger_devflow-app-service_pkg_domain_Application"
                         }
                     }
                 }
@@ -345,42 +306,11 @@
         }
     },
     "definitions": {
-        "api.UpdateActiveManifestRequest": {
-            "type": "object",
-            "required": [
-                "image_id"
-            ],
-            "properties": {
-                "image_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "httpx.CreateResponse": {
-            "type": "object",
-            "properties": {
-                "execution_intent_id": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                }
-            }
-        },
-        "model.Application": {
+        "github_com_bsonger_devflow-app-service_pkg_domain.Application": {
             "type": "object",
             "properties": {
                 "active_image_id": {
                     "type": "string"
-                },
-                "active_image_name": {
-                    "type": "string"
-                },
-                "config_maps": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/model.ConfigMap"
-                    }
                 },
                 "created_at": {
                     "type": "string"
@@ -388,20 +318,17 @@
                 "deleted_at": {
                     "type": "string"
                 },
-                "envs": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/definitions/model.EnvVar"
-                        }
-                    }
+                "description": {
+                    "type": "string"
                 },
                 "id": {
                     "type": "string"
                 },
-                "internet": {
-                    "$ref": "#/definitions/model.Internet"
+                "labels": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_bsonger_devflow-app-service_pkg_domain.LabelItem"
+                    }
                 },
                 "name": {
                     "type": "string"
@@ -409,50 +336,18 @@
                 "project_id": {
                     "type": "string"
                 },
-                "project_name": {
+                "repo_address": {
                     "type": "string"
-                },
-                "replica": {
-                    "type": "integer"
-                },
-                "repo_url": {
-                    "type": "string"
-                },
-                "service": {
-                    "$ref": "#/definitions/model.Service"
-                },
-                "status": {
-                    "type": "string"
-                },
-                "type": {
-                    "$ref": "#/definitions/model.ReleaseType"
                 },
                 "updated_at": {
                     "type": "string"
                 }
             }
         },
-        "model.ConfigMap": {
+        "github_com_bsonger_devflow-app-service_pkg_domain.LabelItem": {
             "type": "object",
             "properties": {
-                "files_path": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "string"
-                    }
-                },
-                "mount_path": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                }
-            }
-        },
-        "model.EnvVar": {
-            "type": "object",
-            "properties": {
-                "name": {
+                "key": {
                     "type": "string"
                 },
                 "value": {
@@ -460,32 +355,7 @@
                 }
             }
         },
-        "model.Internet": {
-            "type": "string",
-            "enum": [
-                "internal",
-                "external"
-            ],
-            "x-enum-varnames": [
-                "Internal",
-                "External"
-            ]
-        },
-        "model.Port": {
-            "type": "object",
-            "properties": {
-                "name": {
-                    "type": "string"
-                },
-                "port": {
-                    "type": "integer"
-                },
-                "target_port": {
-                    "type": "integer"
-                }
-            }
-        },
-        "model.Project": {
+        "github_com_bsonger_devflow-app-service_pkg_domain.Project": {
             "type": "object",
             "properties": {
                 "created_at": {
@@ -500,64 +370,178 @@
                 "id": {
                     "type": "string"
                 },
-                "key": {
-                    "type": "string"
-                },
                 "labels": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "string"
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_bsonger_devflow-app-service_pkg_domain.LabelItem"
                     }
                 },
                 "name": {
                     "type": "string"
-                },
-                "namespace": {
-                    "type": "string"
-                },
-                "owner": {
-                    "type": "string"
-                },
-                "status": {
-                    "$ref": "#/definitions/model.ProjectStatus"
                 },
                 "updated_at": {
                     "type": "string"
                 }
             }
         },
-        "model.ProjectStatus": {
-            "type": "string",
-            "enum": [
-                "active",
-                "archived"
-            ],
-            "x-enum-varnames": [
-                "ProjectActive",
-                "ProjectArchived"
-            ]
-        },
-        "model.ReleaseType": {
-            "type": "string",
-            "enum": [
-                "normal",
-                "canary",
-                "blue-green"
-            ],
-            "x-enum-varnames": [
-                "Normal",
-                "Canary",
-                "BlueGreen"
-            ]
-        },
-        "model.Service": {
+        "httpx.DataResponse-github_com_bsonger_devflow-app-service_pkg_domain_Application": {
             "type": "object",
             "properties": {
-                "ports": {
+                "data": {
+                    "$ref": "#/definitions/github_com_bsonger_devflow-app-service_pkg_domain.Application"
+                }
+            }
+        },
+        "httpx.DataResponse-github_com_bsonger_devflow-app-service_pkg_domain_Project": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/github_com_bsonger_devflow-app-service_pkg_domain.Project"
+                }
+            }
+        },
+        "httpx.ListResponse-github_com_bsonger_devflow-app-service_pkg_domain_Application": {
+            "type": "object",
+            "properties": {
+                "data": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/model.Port"
+                        "$ref": "#/definitions/github_com_bsonger_devflow-app-service_pkg_domain.Application"
                     }
+                },
+                "pagination": {
+                    "$ref": "#/definitions/httpx.Pagination"
+                }
+            }
+        },
+        "httpx.ListResponse-github_com_bsonger_devflow-app-service_pkg_domain_Project": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_bsonger_devflow-app-service_pkg_domain.Project"
+                    }
+                },
+                "pagination": {
+                    "$ref": "#/definitions/httpx.Pagination"
+                }
+            }
+        },
+        "httpx.Pagination": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "limit": {
+                    "type": "integer"
+                },
+                "offset": {
+                    "type": "integer"
+                },
+                "page": {
+                    "type": "integer"
+                },
+                "page_size": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "pkg_api.CreateApplicationRequest": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "labels": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_bsonger_devflow-app-service_pkg_domain.LabelItem"
+                    }
+                },
+                "name": {
+                    "type": "string"
+                },
+                "project_id": {
+                    "type": "string"
+                },
+                "repo_address": {
+                    "type": "string"
+                }
+            }
+        },
+        "pkg_api.CreateProjectRequest": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "labels": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_bsonger_devflow-app-service_pkg_domain.LabelItem"
+                    }
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "pkg_api.UpdateActiveImageRequest": {
+            "type": "object",
+            "required": [
+                "image_id"
+            ],
+            "properties": {
+                "image_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "pkg_api.UpdateApplicationRequest": {
+            "type": "object",
+            "properties": {
+                "active_image_id": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "labels": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_bsonger_devflow-app-service_pkg_domain.LabelItem"
+                    }
+                },
+                "name": {
+                    "type": "string"
+                },
+                "project_id": {
+                    "type": "string"
+                },
+                "repo_address": {
+                    "type": "string"
+                }
+            }
+        },
+        "pkg_api.UpdateProjectRequest": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "labels": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_bsonger_devflow-app-service_pkg_domain.LabelItem"
+                    }
+                },
+                "name": {
+                    "type": "string"
                 }
             }
         }

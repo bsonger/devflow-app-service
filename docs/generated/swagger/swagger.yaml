@@ -1,97 +1,37 @@
 definitions:
-  api.UpdateActiveManifestRequest:
-    properties:
-      image_id:
-        type: string
-    required:
-    - image_id
-    type: object
-  httpx.CreateResponse:
-    properties:
-      execution_intent_id:
-        type: string
-      id:
-        type: string
-    type: object
-  model.Application:
+  github_com_bsonger_devflow-app-service_pkg_domain.Application:
     properties:
       active_image_id:
         type: string
-      active_image_name:
-        type: string
-      config_maps:
-        items:
-          $ref: '#/definitions/model.ConfigMap'
-        type: array
       created_at:
         type: string
       deleted_at:
         type: string
-      envs:
-        additionalProperties:
-          items:
-            $ref: '#/definitions/model.EnvVar'
-          type: array
-        type: object
+      description:
+        type: string
       id:
         type: string
-      internet:
-        $ref: '#/definitions/model.Internet'
+      labels:
+        items:
+          $ref: '#/definitions/github_com_bsonger_devflow-app-service_pkg_domain.LabelItem'
+        type: array
       name:
         type: string
       project_id:
         type: string
-      project_name:
+      repo_address:
         type: string
-      replica:
-        type: integer
-      repo_url:
-        type: string
-      service:
-        $ref: '#/definitions/model.Service'
-      status:
-        type: string
-      type:
-        $ref: '#/definitions/model.ReleaseType'
       updated_at:
         type: string
     type: object
-  model.ConfigMap:
+  github_com_bsonger_devflow-app-service_pkg_domain.LabelItem:
     properties:
-      files_path:
-        additionalProperties:
-          type: string
-        type: object
-      mount_path:
-        type: string
-      name:
-        type: string
-    type: object
-  model.EnvVar:
-    properties:
-      name:
+      key:
         type: string
       value:
         type: string
     type: object
-  model.Internet:
-    enum:
-    - internal
-    - external
-    type: string
-    x-enum-varnames:
-    - Internal
-    - External
-  model.Port:
-    properties:
-      name:
-        type: string
-      port:
-        type: integer
-      target_port:
-        type: integer
-    type: object
-  model.Project:
+  github_com_bsonger_devflow-app-service_pkg_domain.Project:
     properties:
       created_at:
         type: string
@@ -101,47 +41,118 @@ definitions:
         type: string
       id:
         type: string
-      key:
-        type: string
       labels:
-        additionalProperties:
-          type: string
-        type: object
+        items:
+          $ref: '#/definitions/github_com_bsonger_devflow-app-service_pkg_domain.LabelItem'
+        type: array
       name:
         type: string
-      namespace:
-        type: string
-      owner:
-        type: string
-      status:
-        $ref: '#/definitions/model.ProjectStatus'
       updated_at:
         type: string
     type: object
-  model.ProjectStatus:
-    enum:
-    - active
-    - archived
-    type: string
-    x-enum-varnames:
-    - ProjectActive
-    - ProjectArchived
-  model.ReleaseType:
-    enum:
-    - normal
-    - canary
-    - blue-green
-    type: string
-    x-enum-varnames:
-    - Normal
-    - Canary
-    - BlueGreen
-  model.Service:
+  httpx.DataResponse-github_com_bsonger_devflow-app-service_pkg_domain_Application:
     properties:
-      ports:
+      data:
+        $ref: '#/definitions/github_com_bsonger_devflow-app-service_pkg_domain.Application'
+    type: object
+  httpx.DataResponse-github_com_bsonger_devflow-app-service_pkg_domain_Project:
+    properties:
+      data:
+        $ref: '#/definitions/github_com_bsonger_devflow-app-service_pkg_domain.Project'
+    type: object
+  httpx.ListResponse-github_com_bsonger_devflow-app-service_pkg_domain_Application:
+    properties:
+      data:
         items:
-          $ref: '#/definitions/model.Port'
+          $ref: '#/definitions/github_com_bsonger_devflow-app-service_pkg_domain.Application'
         type: array
+      pagination:
+        $ref: '#/definitions/httpx.Pagination'
+    type: object
+  httpx.ListResponse-github_com_bsonger_devflow-app-service_pkg_domain_Project:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/github_com_bsonger_devflow-app-service_pkg_domain.Project'
+        type: array
+      pagination:
+        $ref: '#/definitions/httpx.Pagination'
+    type: object
+  httpx.Pagination:
+    properties:
+      enabled:
+        type: boolean
+      limit:
+        type: integer
+      offset:
+        type: integer
+      page:
+        type: integer
+      page_size:
+        type: integer
+      total:
+        type: integer
+    type: object
+  pkg_api.CreateApplicationRequest:
+    properties:
+      description:
+        type: string
+      labels:
+        items:
+          $ref: '#/definitions/github_com_bsonger_devflow-app-service_pkg_domain.LabelItem'
+        type: array
+      name:
+        type: string
+      project_id:
+        type: string
+      repo_address:
+        type: string
+    type: object
+  pkg_api.CreateProjectRequest:
+    properties:
+      description:
+        type: string
+      labels:
+        items:
+          $ref: '#/definitions/github_com_bsonger_devflow-app-service_pkg_domain.LabelItem'
+        type: array
+      name:
+        type: string
+    type: object
+  pkg_api.UpdateActiveImageRequest:
+    properties:
+      image_id:
+        type: string
+    required:
+    - image_id
+    type: object
+  pkg_api.UpdateApplicationRequest:
+    properties:
+      active_image_id:
+        type: string
+      description:
+        type: string
+      labels:
+        items:
+          $ref: '#/definitions/github_com_bsonger_devflow-app-service_pkg_domain.LabelItem'
+        type: array
+      name:
+        type: string
+      project_id:
+        type: string
+      repo_address:
+        type: string
+    type: object
+  pkg_api.UpdateProjectRequest:
+    properties:
+      description:
+        type: string
+      labels:
+        items:
+          $ref: '#/definitions/github_com_bsonger_devflow-app-service_pkg_domain.LabelItem'
+        type: array
+      name:
+        type: string
     type: object
 info:
   contact: {}
@@ -152,9 +163,7 @@ paths:
         "200":
           description: OK
           schema:
-            items:
-              $ref: '#/definitions/model.Application'
-            type: array
+            $ref: '#/definitions/httpx.ListResponse-github_com_bsonger_devflow-app-service_pkg_domain_Application'
       summary: 获取应用列表
       tags:
       - Application
@@ -168,14 +177,14 @@ paths:
         name: data
         required: true
         schema:
-          $ref: '#/definitions/model.Application'
+          $ref: '#/definitions/pkg_api.CreateApplicationRequest'
       produces:
       - application/json
       responses:
-        "200":
-          description: OK
+        "201":
+          description: Created
           schema:
-            $ref: '#/definitions/httpx.CreateResponse'
+            $ref: '#/definitions/httpx.DataResponse-github_com_bsonger_devflow-app-service_pkg_domain_Application'
       summary: 创建应用
       tags:
       - Application
@@ -188,12 +197,8 @@ paths:
         required: true
         type: string
       responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties:
-              type: string
-            type: object
+        "204":
+          description: No Content
       summary: 删除应用
       tags:
       - Application
@@ -208,7 +213,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/model.Application'
+            $ref: '#/definitions/httpx.DataResponse-github_com_bsonger_devflow-app-service_pkg_domain_Application'
       summary: 获取应用
       tags:
       - Application
@@ -224,14 +229,10 @@ paths:
         name: data
         required: true
         schema:
-          $ref: '#/definitions/model.Application'
+          $ref: '#/definitions/pkg_api.UpdateApplicationRequest'
       responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties:
-              type: string
-            type: object
+        "204":
+          description: No Content
       summary: 更新应用
       tags:
       - Application
@@ -248,14 +249,10 @@ paths:
         name: data
         required: true
         schema:
-          $ref: '#/definitions/api.UpdateActiveManifestRequest'
+          $ref: '#/definitions/pkg_api.UpdateActiveImageRequest'
       responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties:
-              type: string
-            type: object
+        "204":
+          description: No Content
       summary: 更新应用的 Active Image
       tags:
       - Application
@@ -265,9 +262,7 @@ paths:
         "200":
           description: OK
           schema:
-            items:
-              $ref: '#/definitions/model.Project'
-            type: array
+            $ref: '#/definitions/httpx.ListResponse-github_com_bsonger_devflow-app-service_pkg_domain_Project'
       summary: 获取项目列表
       tags:
       - Project
@@ -281,14 +276,14 @@ paths:
         name: data
         required: true
         schema:
-          $ref: '#/definitions/model.Project'
+          $ref: '#/definitions/pkg_api.CreateProjectRequest'
       produces:
       - application/json
       responses:
-        "200":
-          description: OK
+        "201":
+          description: Created
           schema:
-            $ref: '#/definitions/httpx.CreateResponse'
+            $ref: '#/definitions/httpx.DataResponse-github_com_bsonger_devflow-app-service_pkg_domain_Project'
       summary: 创建项目
       tags:
       - Project
@@ -301,12 +296,8 @@ paths:
         required: true
         type: string
       responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties:
-              type: string
-            type: object
+        "204":
+          description: No Content
       summary: 删除项目
       tags:
       - Project
@@ -321,7 +312,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/model.Project'
+            $ref: '#/definitions/httpx.DataResponse-github_com_bsonger_devflow-app-service_pkg_domain_Project'
       summary: 获取项目
       tags:
       - Project
@@ -337,14 +328,10 @@ paths:
         name: data
         required: true
         schema:
-          $ref: '#/definitions/model.Project'
+          $ref: '#/definitions/pkg_api.UpdateProjectRequest'
       responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties:
-              type: string
-            type: object
+        "204":
+          description: No Content
       summary: 更新项目
       tags:
       - Project
@@ -360,9 +347,7 @@ paths:
         "200":
           description: OK
           schema:
-            items:
-              $ref: '#/definitions/model.Application'
-            type: array
+            $ref: '#/definitions/httpx.ListResponse-github_com_bsonger_devflow-app-service_pkg_domain_Application'
       summary: 获取项目下的应用列表
       tags:
       - Project
