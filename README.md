@@ -21,6 +21,7 @@
 - `go run ./cmd`
 - `go build ./cmd/main.go`
 - `go test ./...`
+- Swagger UI: `/swagger/index.html`
 
 ## Key Docs
 
@@ -28,3 +29,4 @@
 - `docs/api-spec.md`
 - `docs/constraints.md`
 - `docs/resources/README.md`
+- `docs/generated/swagger/swagger.yaml`

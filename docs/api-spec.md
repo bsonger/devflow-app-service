@@ -9,6 +9,11 @@
 
 It also owns the narrow `Application.active_image` binding endpoint.
 
+## Swagger
+
+- local UI: `/swagger/index.html`
+- generated source: `docs/generated/swagger/swagger.yaml`
+
 ## Endpoint Groups
 
 ### `Project`
