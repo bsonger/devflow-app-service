@@ -1,24 +1,12 @@
 # Observability
 
-## Shared Baseline
+## Purpose
 
-This repo follows the shared telemetry contract implemented in `devflow-service-common`.
+`devflow-app-service` emits the shared backend telemetry baseline plus project/application metadata context.
 
-- structured logs with shared runtime fields
-- `devflow_http_*` ingress metrics
-- standard server/client spans with service-defined business attributes
-- optional diagnostics only for `pprof` and Pyroscope
+## Logs
 
-## Repo-Local Focus
-
-`devflow-app-service` should add resource context for:
-
-- `project`
-- `application`
-- `active_image`
-
-Recommended structured fields:
-
+Required structured fields:
 - `resource`
 - `resource_id`
 - `project_id`
@@ -26,13 +14,30 @@ Recommended structured fields:
 - `result`
 - `error_code`
 
-## Metrics Notes
+## Metrics
 
+- use shared `devflow_http_*` ingress metrics
 - do not add ID-like labels to custom metrics
-- `/metrics`, `/healthz`, `/readyz`, and `/debug/pprof/*` are excluded from business HTTP telemetry
+- exclude `/metrics`, `/healthz`, `/readyz`, and `/debug/pprof/*` from business HTTP telemetry
 
-## Profile
+## Tracing
 
-- `pprof` is disabled by default
-- Pyroscope is disabled by default
-- both are enabled only through explicit runtime configuration
+- every business HTTP request should create a server span
+- downstream calls, if added later, must emit client spans with propagated trace context
+- resource-scoped attributes should prefer project/application identifiers over free-form text
+
+## Health and readiness
+
+- expose `/healthz`, `/readyz`, and `/metrics`
+- keep Swagger endpoints and diagnostics outside business metrics aggregation
+
+## Failure modes
+
+Watch for:
+- project/application CRUD storage failures
+- invalid `active_image` binding requests
+- stale metadata assumptions leaking into downstream services
+
+## Dashboards and runbooks
+
+Use the shared backend dashboard/runbook set until repo-specific views exist.

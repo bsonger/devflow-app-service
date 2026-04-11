@@ -9,10 +9,11 @@ Read in this order:
 5. `docs/observability.md`
 
 Public API: yes.
-This repo owns `Project`, `Application`, `Environment`, and the `Application.active_image` binding.
+This repo owns `Project`, `Application`, `Environment`, `Application.active_image binding`.
 If ownership, compatibility, or boundary questions appear, go back to `../devflow-control/docs/system/boundaries.md` and `../devflow-control/docs/policies/api-compatibility.md`.
 
 ## Commands
+- `bash scripts/verify.sh`
 - `bash scripts/regen-swagger.sh`
 - `go test ./...`
 - `bash scripts/build.sh`
@@ -24,8 +25,7 @@ If ownership, compatibility, or boundary questions appear, go back to `../devflo
 - Review `../devflow-control/docs/policies/api-compatibility.md` before shipping any non-backward-compatible change.
 
 ## Before handoff
-- Rerun `go test ./...`.
-- Rerun `bash scripts/build.sh`.
+- Rerun `bash scripts/verify.sh`.
 - Ensure `docs/api-spec.md` and `docs/generated/swagger/*` are not stale.
 
 ## When to go back to devflow-control
