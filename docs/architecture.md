@@ -7,7 +7,7 @@
 - `Project`
 - `Environment`
 - `Application`
-- `ServiceResource`
+- `Service`
 
 It provides project/environment/application relationships, application repository identity, static service metadata, and the narrow `active_image` binding.
 
@@ -28,16 +28,16 @@ Where:
 The converged target resource model is:
 
 - `Project` 1 -> N `Application`
-- `Application` 1 -> N `ServiceResource`
+- `Application` 1 -> N `Service`
 - `Application.repo_address` is the unified repository locator
-- `ServiceResource` stores `description`, `labels`, and `ports`
+- `Service` stores `description`, `labels`, and `ports`
 
 ## Request Flow
 
 ```text
 Client
   -> router
-  -> project/application/service-resource handler
+  -> project/application/service handler
   -> metadata service logic
   -> persistence store
   -> HTTP response
@@ -54,14 +54,14 @@ Client
   - route registration
   - middleware wiring
 - `pkg/api`
-  - project/application/service-resource handlers
+  - project/application/service handlers
 - `pkg/app`
   - metadata behavior
   - `active_image` binding rules
 - `pkg/infra/store`
   - repo-owned metadata persistence
 - `pkg/domain`
-  - `Project`, `Application`, `ServiceResource`
+  - `Project`, `Application`, `Service`
 
 ## External Dependencies
 
@@ -71,7 +71,7 @@ Client
 
 ## Non-Goals
 
-- `Manifest`
+- `Image`
 - `Release`
 - `Intent`
 - `Configuration`

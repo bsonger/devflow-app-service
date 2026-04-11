@@ -1,8 +1,8 @@
-# Service Resource
+# Service
 
 ## Purpose
 
-`ServiceResource` defines stable service metadata for one application.
+`Service` defines stable service metadata for one application.
 
 ## Owns
 

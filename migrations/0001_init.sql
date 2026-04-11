@@ -38,8 +38,24 @@ CREATE UNIQUE INDEX IF NOT EXISTS uq_applications_project_name_active
 CREATE INDEX IF NOT EXISTS idx_applications_project_id
   ON applications (project_id);
 
-CREATE INDEX IF NOT EXISTS idx_applications_active_manifest_id
-  ON applications (active_manifest_id);
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_name = 'applications' AND column_name = 'active_image_id'
+  ) THEN
+    CREATE INDEX IF NOT EXISTS idx_applications_active_image_id
+      ON applications (active_image_id);
+  ELSIF EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_name = 'applications' AND column_name = 'active_manifest_id'
+  ) THEN
+    CREATE INDEX IF NOT EXISTS idx_applications_active_manifest_id
+      ON applications (active_manifest_id);
+  END IF;
+END $$;
 
 CREATE TABLE IF NOT EXISTS services (
   id UUID PRIMARY KEY,

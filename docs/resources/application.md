@@ -10,7 +10,7 @@
 ## Purpose
 
 `Application` 是应用元数据资源，并维护应用侧的 `active_image` 绑定。
-服务静态定义已经拆分到独立的 `ServiceResource` 子资源。
+服务静态定义已经拆分到独立的 `Service` 子资源。
 
 ## Common base fields
 
@@ -29,10 +29,10 @@
 | `name` | `string` | required | user | 应用名 |
 | `repo_address` | `string` | required | user | 代码仓库地址 |
 | `description` | `string` | optional | user | 应用描述 |
-| `active_image_id` | `*uuid.UUID` | optional | system/user | 当前绑定的 manifest ID |
+| `active_image_id` | `*uuid.UUID` | optional | system/user | 当前绑定的 image ID |
 | `labels` | `map[string]string` | optional | user | 应用标签 |
 
-## Related child resource: `ServiceResource`
+## Related child resource: `Service`
 
 `Application` 不再直接承载服务暴露字段；相关信息迁移为独立子资源：
 
@@ -43,7 +43,7 @@
 | `labels` | `map[string]string` | 服务标签 |
 | `ports` | `[]ServicePort` | 服务端口到 Pod 端口映射 |
 
-## Active manifest binding
+## Active image binding
 
 `active_image` 不是 build/release 编排 owner，只表示应用当前绑定的活动版本。
 
@@ -57,7 +57,7 @@
 - `image_id: string`（required，当前 handler 层仍以字符串承载）
 
 附加规则：
-- `image_id` 必须引用属于当前 application 的 manifest
+- `image_id` 必须引用属于当前 application 的 image
 
 ## Create / update rules
 
@@ -79,8 +79,8 @@
 ## Validation notes
 
 - `project_id` 必须引用存在的 `Project`
-- `image_id` patch 时必须引用属于该应用的 manifest
-- 服务静态端口定义由 `ServiceResource` 独立承担
+- `image_id` patch 时必须引用属于该应用的 image
+- 服务静态端口定义由 `Service` 独立承担
 
 ## Source pointers
 
@@ -88,4 +88,4 @@
 - handler: `pkg/api/application.go`
 - service: `pkg/app/application.go`
 - model: `pkg/domain/application.go`
-- manifest reference helper: `pkg/domain/manifest.go`
+- image reference helper: `pkg/domain/image.go`

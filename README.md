@@ -22,6 +22,7 @@
 - `go build ./cmd/main.go`
 - `go test ./...`
 - Swagger UI: `/swagger/index.html`
+- Staging Swagger UI: `/api/v1/app/swagger/index.html`
 
 ## Key Docs
 
