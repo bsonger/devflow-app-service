@@ -7,9 +7,9 @@
 - `Project`
 - `Environment`
 - `Application`
-- `Service`
 
-It provides project/environment/application relationships, application repository identity, static service metadata, and the narrow `active_image` binding.
+It provides project/environment/application relationships, application repository identity, shared environment vocabulary, and the narrow `active_image` binding.
+Its current public API surface remains intentionally narrower than the full metadata model and exposes only `Project`, `Application`, and the `active_image` binding.
 
 ## Architecture Style
 
@@ -28,16 +28,15 @@ Where:
 The converged target resource model is:
 
 - `Project` 1 -> N `Application`
-- `Application` 1 -> N `Service`
+- `Environment` defines a stable deploy-target identity reused by runtime and release flows
 - `Application.repo_address` is the unified repository locator
-- `Service` stores `description`, `labels`, and `ports`
 
 ## Request Flow
 
 ```text
 Client
   -> router
-  -> project/application/service handler
+  -> project/application handler
   -> metadata service logic
   -> persistence store
   -> HTTP response
@@ -54,14 +53,14 @@ Client
   - route registration
   - middleware wiring
 - `pkg/api`
-  - project/application/service handlers
+  - project/application handlers
 - `pkg/app`
   - metadata behavior
   - `active_image` binding rules
 - `pkg/infra/store`
   - repo-owned metadata persistence
 - `pkg/domain`
-  - `Project`, `Application`, `Service`
+  - `Project`, `Environment`, `Application`
 
 ## External Dependencies
 

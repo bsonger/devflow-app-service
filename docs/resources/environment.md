@@ -3,6 +3,7 @@
 ## Purpose
 
 `Environment` defines a deploy target identity used by configuration, runtime, and release flows.
+It is part of the current app-owned metadata model even though the repo does not yet expose standalone public `Environment` CRUD/list endpoints in `docs/api-spec.md`.
 
 ## Field table
 

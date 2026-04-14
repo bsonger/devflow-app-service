@@ -8,6 +8,7 @@
 - `Application`
 
 It also owns the narrow `Application.active_image` binding endpoint.
+`Environment` remains an app-owned metadata concept, but it does not currently expose standalone public CRUD/list endpoints here.
 
 ## Swagger
 
@@ -39,6 +40,7 @@ It also owns the narrow `Application.active_image` binding endpoint.
 - `PATCH /api/v1/applications/{id}/active_image` requires `image_id`
 - `active_image` only represents the currently bound image, not build/release orchestration state
 - `Application` owns stable app metadata such as `project_id`, `name`, `repo_address`, `labels`, and `active_image_id`
+- `Environment` remains shared deploy-target vocabulary only until a future public API surface is explicitly documented
 - app-service does not own environment variables or environment-specific deployment state
 - app-service does not own images, releases, configuration revisions, or verification records
 
