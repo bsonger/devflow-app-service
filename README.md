@@ -2,6 +2,13 @@
 
 `devflow-app-service` owns `Project` and `Application` metadata.
 
+## Role
+
+- own `Project`
+- own `Application`
+- maintain `Application.active_image` binding
+- provide application/project catalog queries for other services and the platform console
+
 ## Current contract highlights
 
 - `Project.labels` and `Application.labels` now use ordered `[{ key, value }]`
@@ -9,14 +16,7 @@
 - `Application.active_image_id` remains the only app-service release-facing binding
 - environment-specific console views are **not** owned here
 
-## Backend Role
-
-- own `Project`
-- own `Application`
-- maintain `Application.active_image` binding
-- provide application/project catalog queries for other services and the platform console
-
-## Local Run
+## Key Commands
 
 - `go run ./cmd`
 - `go build ./cmd/main.go`
@@ -26,8 +26,11 @@
 
 ## Key Docs
 
+- `docs/README.md`
+- `scripts/README.md`
 - `docs/architecture.md`
-- `docs/api-spec.md`
 - `docs/constraints.md`
+- `docs/observability.md`
+- `docs/api-spec.md`
 - `docs/resources/README.md`
 - `docs/generated/swagger/swagger.yaml`

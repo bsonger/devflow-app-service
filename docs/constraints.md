@@ -1,30 +1,30 @@
-# 约束
+# Constraints
 
-## 资源归属
+## Ownership
 
-- `Project` 是顶层空间资源
-- `Application` 归属于 `Project`
-- `Application.active_image` 只能引用应用当前活动版本
+- `Project` is the top-level workspace resource.
+- `Application` belongs to one `Project`.
+- `Application.active_image` may only reference the current active image binding for that application.
 
-## 边界约束
+## Hard constraints
 
-- 不允许在 app-service 中引入 `Manifest`、`Release`、`Intent`、`Configuration`、`Verify` 对外资源
-- 不允许把执行面状态写回职责放进 app-service
-- 不允许把其他服务的领域模型复制回 app-service
+- do not introduce `Manifest`, `Release`, `Intent`, `Configuration`, or `Verify` as public resources in this repo
+- do not move execution-state writeback behavior into app-service
+- do not copy other service domain models into app-service just for convenience
 
-## 状态与删除
+## Data rules
 
-- 删除应遵守仓库既有软删除语义
-- 对外返回的列表与详情必须遵守软删除过滤规则
-- `active_image` 的更新必须保持幂等
+- deletion must follow the repo's existing soft-delete semantics
+- list and detail responses must honor soft-delete filtering rules
+- `active_image` updates must remain idempotent
 
-## 跨服务调用
+## Dependency rules
 
-- 只要出现出站调用，就必须同时产出 `metrics + trace + structured log`
-- 出站调用的资源主键只能进日志和 trace attribute，不能进 metrics label
+- any outbound dependency call must emit metrics, traces, and structured logs together
+- resource identifiers may appear in logs and trace attributes, but not as metric labels
 
-## 禁止事项
+## Non-goals
 
-- 不要为了便利把执行面对象并入 `Application`
-- 不要在 handler 中直接拼接数据库更新逻辑
-- 不要把 Swagger 里的历史接口当作当前边界
+- merging execution-plane objects into `Application`
+- building direct database update logic inside HTTP handlers
+- treating historical Swagger entries as the current ownership boundary

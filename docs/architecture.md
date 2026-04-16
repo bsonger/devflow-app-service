@@ -11,7 +11,7 @@
 It provides project/environment/application relationships, application repository identity, shared environment vocabulary, and the narrow `active_image` binding.
 Its current public API surface remains intentionally narrower than the full metadata model and exposes only `Project`, `Application`, and the `active_image` binding.
 
-## Architecture Style
+## Architecture style
 
 This repo uses a **layered metadata-service backend**:
 
@@ -31,7 +31,7 @@ The converged target resource model is:
 - `Environment` defines a stable deploy-target identity reused by runtime and release flows
 - `Application.repo_address` is the unified repository locator
 
-## Request Flow
+## Request flow
 
 ```text
 Client
@@ -42,7 +42,7 @@ Client
   -> HTTP response
 ```
 
-## Internal Package Layout
+## Internal package layout
 
 - `cmd/main.go`
   - process entrypoint only
@@ -62,13 +62,19 @@ Client
 - `pkg/domain`
   - `Project`, `Environment`, `Application`
 
-## External Dependencies
+## External dependencies
 
 - `Gin`
 - PostgreSQL persistence
 - `devflow-service-common`
 
-## Non-Goals
+## Swagger generation
+
+- `Dockerfile` runs `swag init -g cmd/main.go --parseDependency -o docs/generated/swagger` before building.
+- Keep the generated bundle under `docs/generated/swagger`; rerun `scripts/regen-swagger.sh` when handlers change.
+- `scripts/build.sh` wraps regeneration plus `go build` for locals, and `scripts/export_service_repo.sh` always copies the generated folder.
+
+## Non-goals
 
 - `Image`
 - `Release`
@@ -78,9 +84,3 @@ Client
 - environment-variable ownership
 - verify ingress
 - Tekton / Argo / Kubernetes execution orchestration
-
-## Swagger generation
-
-- `Dockerfile` runs `swag init -g cmd/main.go --parseDependency -o docs/generated/swagger` before building.
-- Keep the generated bundle under `docs/generated/swagger`; rerun `scripts/regen-swagger.sh` when handlers change.
-- `scripts/build.sh` wraps regeneration plus `go build` for locals, and `scripts/export_service_repo.sh` always copies the generated folder.
