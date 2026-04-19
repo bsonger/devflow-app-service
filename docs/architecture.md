@@ -5,11 +5,12 @@
 `devflow-app-service` is the metadata owner for:
 
 - `Project`
-- `Environment`
 - `Application`
+- `Cluster`
+- `Environment`
 
-It provides project/environment/application relationships, application repository identity, shared environment vocabulary, and the narrow `active_image` binding.
-Its current public API surface remains intentionally narrower than the full metadata model and exposes only `Project`, `Application`, and the `active_image` binding.
+It provides project/application relationships, shared deploy-target vocabulary, cluster destination metadata, and the narrow `active_image` binding.
+Its public API surface now exposes CRUD/list endpoints for `Project`, `Application`, `Cluster`, and `Environment`, plus the dedicated `active_image` binding.
 
 ## Architecture style
 
@@ -28,7 +29,8 @@ Where:
 The converged target resource model is:
 
 - `Project` 1 -> N `Application`
-- `Environment` defines a stable deploy-target identity reused by runtime and release flows
+- `Cluster` defines the deploy-target Kubernetes API server and connection material
+- `Environment` defines deploy semantics and selects one `Cluster`
 - `Application.repo_address` is the unified repository locator
 
 ## Request flow
@@ -36,7 +38,7 @@ The converged target resource model is:
 ```text
 Client
   -> router
-  -> project/application handler
+  -> project/application/cluster/environment handler
   -> metadata service logic
   -> persistence store
   -> HTTP response
@@ -53,14 +55,15 @@ Client
   - route registration
   - middleware wiring
 - `pkg/api`
-  - project/application handlers
+  - project/application/cluster/environment handlers
 - `pkg/app`
   - metadata behavior
+  - cross-resource reference validation
   - `active_image` binding rules
 - `pkg/infra/store`
   - repo-owned metadata persistence
 - `pkg/domain`
-  - `Project`, `Environment`, `Application`
+  - `Project`, `Application`, `Cluster`, `Environment`
 
 ## External dependencies
 

@@ -168,6 +168,250 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/clusters": {
+            "get": {
+                "tags": [
+                    "Cluster"
+                ],
+                "summary": "获取集群列表",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ListResponse-github_com_bsonger_devflow-app-service_pkg_domain_Cluster"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "创建一个新的集群",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Cluster"
+                ],
+                "summary": "创建集群",
+                "parameters": [
+                    {
+                        "description": "Cluster Data",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/pkg_api.CreateClusterRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.DataResponse-github_com_bsonger_devflow-app-service_pkg_domain_Cluster"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/clusters/{id}": {
+            "get": {
+                "tags": [
+                    "Cluster"
+                ],
+                "summary": "获取集群",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Cluster ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.DataResponse-github_com_bsonger_devflow-app-service_pkg_domain_Cluster"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Cluster"
+                ],
+                "summary": "更新集群",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Cluster ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Cluster Data",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/pkg_api.UpdateClusterRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Cluster"
+                ],
+                "summary": "删除集群",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Cluster ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    }
+                }
+            }
+        },
+        "/api/v1/environments": {
+            "get": {
+                "tags": [
+                    "Environment"
+                ],
+                "summary": "获取环境列表",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ListResponse-github_com_bsonger_devflow-app-service_pkg_domain_Environment"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "创建一个新的环境",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Environment"
+                ],
+                "summary": "创建环境",
+                "parameters": [
+                    {
+                        "description": "Environment Data",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/pkg_api.CreateEnvironmentRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.DataResponse-github_com_bsonger_devflow-app-service_pkg_domain_Environment"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/environments/{id}": {
+            "get": {
+                "tags": [
+                    "Environment"
+                ],
+                "summary": "获取环境",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Environment ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.DataResponse-github_com_bsonger_devflow-app-service_pkg_domain_Environment"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Environment"
+                ],
+                "summary": "更新环境",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Environment ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Environment Data",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/pkg_api.UpdateEnvironmentRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Environment"
+                ],
+                "summary": "删除环境",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Environment ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    }
+                }
+            }
+        },
         "/api/v1/projects": {
             "get": {
                 "tags": [
@@ -355,6 +599,85 @@ const docTemplate = `{
                 }
             }
         },
+        "github_com_bsonger_devflow-app-service_pkg_domain.Cluster": {
+            "type": "object",
+            "properties": {
+                "argocd_cluster_name": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "deleted_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "kubeconfig": {
+                    "type": "string"
+                },
+                "labels": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_bsonger_devflow-app-service_pkg_domain.LabelItem"
+                    }
+                },
+                "name": {
+                    "type": "string"
+                },
+                "onboarding_checked_at": {
+                    "type": "string"
+                },
+                "onboarding_error": {
+                    "type": "string"
+                },
+                "onboarding_ready": {
+                    "type": "boolean"
+                },
+                "server": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_bsonger_devflow-app-service_pkg_domain.Environment": {
+            "type": "object",
+            "properties": {
+                "cluster_id": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "deleted_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "labels": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_bsonger_devflow-app-service_pkg_domain.LabelItem"
+                    }
+                },
+                "name": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
         "github_com_bsonger_devflow-app-service_pkg_domain.LabelItem": {
             "type": "object",
             "properties": {
@@ -403,6 +726,22 @@ const docTemplate = `{
                 }
             }
         },
+        "httpx.DataResponse-github_com_bsonger_devflow-app-service_pkg_domain_Cluster": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/github_com_bsonger_devflow-app-service_pkg_domain.Cluster"
+                }
+            }
+        },
+        "httpx.DataResponse-github_com_bsonger_devflow-app-service_pkg_domain_Environment": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/github_com_bsonger_devflow-app-service_pkg_domain.Environment"
+                }
+            }
+        },
         "httpx.DataResponse-github_com_bsonger_devflow-app-service_pkg_domain_Project": {
             "type": "object",
             "properties": {
@@ -418,6 +757,34 @@ const docTemplate = `{
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/github_com_bsonger_devflow-app-service_pkg_domain.Application"
+                    }
+                },
+                "pagination": {
+                    "$ref": "#/definitions/httpx.Pagination"
+                }
+            }
+        },
+        "httpx.ListResponse-github_com_bsonger_devflow-app-service_pkg_domain_Cluster": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_bsonger_devflow-app-service_pkg_domain.Cluster"
+                    }
+                },
+                "pagination": {
+                    "$ref": "#/definitions/httpx.Pagination"
+                }
+            }
+        },
+        "httpx.ListResponse-github_com_bsonger_devflow-app-service_pkg_domain_Environment": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_bsonger_devflow-app-service_pkg_domain.Environment"
                     }
                 },
                 "pagination": {
@@ -485,6 +852,61 @@ const docTemplate = `{
                 }
             }
         },
+        "pkg_api.CreateClusterRequest": {
+            "type": "object",
+            "required": [
+                "kubeconfig",
+                "name",
+                "server"
+            ],
+            "properties": {
+                "argocd_cluster_name": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "kubeconfig": {
+                    "type": "string"
+                },
+                "labels": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_bsonger_devflow-app-service_pkg_domain.LabelItem"
+                    }
+                },
+                "name": {
+                    "type": "string"
+                },
+                "server": {
+                    "type": "string"
+                }
+            }
+        },
+        "pkg_api.CreateEnvironmentRequest": {
+            "type": "object",
+            "required": [
+                "cluster_id",
+                "name"
+            ],
+            "properties": {
+                "cluster_id": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "labels": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_bsonger_devflow-app-service_pkg_domain.LabelItem"
+                    }
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
         "pkg_api.CreateProjectRequest": {
             "type": "object",
             "properties": {
@@ -535,6 +957,61 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "repo_address": {
+                    "type": "string"
+                }
+            }
+        },
+        "pkg_api.UpdateClusterRequest": {
+            "type": "object",
+            "required": [
+                "kubeconfig",
+                "name",
+                "server"
+            ],
+            "properties": {
+                "argocd_cluster_name": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "kubeconfig": {
+                    "type": "string"
+                },
+                "labels": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_bsonger_devflow-app-service_pkg_domain.LabelItem"
+                    }
+                },
+                "name": {
+                    "type": "string"
+                },
+                "server": {
+                    "type": "string"
+                }
+            }
+        },
+        "pkg_api.UpdateEnvironmentRequest": {
+            "type": "object",
+            "required": [
+                "cluster_id",
+                "name"
+            ],
+            "properties": {
+                "cluster_id": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "labels": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_bsonger_devflow-app-service_pkg_domain.LabelItem"
+                    }
+                },
+                "name": {
                     "type": "string"
                 }
             }

@@ -57,6 +57,35 @@ BEGIN
   END IF;
 END $$;
 
+CREATE TABLE IF NOT EXISTS clusters (
+  id UUID PRIMARY KEY,
+  name TEXT NOT NULL,
+  server TEXT NOT NULL,
+  kubeconfig TEXT NOT NULL,
+  argocd_cluster_name TEXT NOT NULL DEFAULT '',
+  description TEXT NOT NULL DEFAULT '',
+  labels JSONB NOT NULL DEFAULT '[]'::jsonb,
+  onboarding_ready BOOLEAN NOT NULL DEFAULT FALSE,
+  onboarding_error TEXT NOT NULL DEFAULT '',
+  onboarding_checked_at TIMESTAMPTZ NULL,
+  created_at TIMESTAMPTZ NOT NULL,
+  updated_at TIMESTAMPTZ NOT NULL,
+  deleted_at TIMESTAMPTZ NULL
+);
+
+ALTER TABLE clusters
+  ADD COLUMN IF NOT EXISTS onboarding_ready BOOLEAN NOT NULL DEFAULT FALSE;
+
+ALTER TABLE clusters
+  ADD COLUMN IF NOT EXISTS onboarding_error TEXT NOT NULL DEFAULT '';
+
+ALTER TABLE clusters
+  ADD COLUMN IF NOT EXISTS onboarding_checked_at TIMESTAMPTZ NULL;
+
+CREATE UNIQUE INDEX IF NOT EXISTS uq_clusters_name_active
+  ON clusters (name)
+  WHERE deleted_at IS NULL;
+
 CREATE TABLE IF NOT EXISTS services (
   id UUID PRIMARY KEY,
   application_id UUID NOT NULL,
@@ -78,16 +107,18 @@ CREATE INDEX IF NOT EXISTS idx_services_application_id
 
 CREATE TABLE IF NOT EXISTS environments (
   id UUID PRIMARY KEY,
-  key TEXT NOT NULL,
   name TEXT NOT NULL,
-  cluster TEXT NOT NULL,
-  namespace TEXT NOT NULL,
-  labels JSONB NOT NULL DEFAULT '{}'::jsonb,
+  cluster_id UUID NOT NULL,
+  description TEXT NOT NULL DEFAULT '',
+  labels JSONB NOT NULL DEFAULT '[]'::jsonb,
   created_at TIMESTAMPTZ NOT NULL,
   updated_at TIMESTAMPTZ NOT NULL,
   deleted_at TIMESTAMPTZ NULL
 );
 
-CREATE UNIQUE INDEX IF NOT EXISTS uq_environments_key_active
-  ON environments (key)
+CREATE UNIQUE INDEX IF NOT EXISTS uq_environments_name_active
+  ON environments (name)
   WHERE deleted_at IS NULL;
+
+CREATE INDEX IF NOT EXISTS idx_environments_cluster_id
+  ON environments (cluster_id);

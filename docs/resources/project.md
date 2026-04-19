@@ -10,6 +10,7 @@
 ## Purpose
 
 `Project` 是顶层空间资源，用于组织 `Application` 元数据。
+在新的 deploy-target 合同里，normalized `Project.name` 还是命名空间推导的项目侧输入，但 `Project` 本身不存储用户可写的 namespace 字段。
 
 ## Common base fields
 
@@ -26,7 +27,7 @@
 |---|---|---|---|---|
 | `name` | `string` | expected on create | user | 项目名 |
 | `description` | `string` | optional | user | 项目描述 |
-| `labels` | `map[string]string` | optional | user | 扩展标签 |
+| `labels` | `[]LabelItem` | optional | user | 扩展标签 |
 
 ## Create / update rules
 
@@ -48,6 +49,7 @@
 
 - 当前 handler 没有单独的字段级 required 校验
 - `id` 必须是合法 UUID 才能用于读取/更新/删除
+- deploy-target namespace 来自 normalized `project.name + environment.name` 规则，而不是 `Project.namespace`
 - 软删除记录默认不会出现在列表里，除非显式包含 deleted 数据
 
 ## Source pointers

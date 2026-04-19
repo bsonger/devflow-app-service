@@ -16,6 +16,8 @@ type Module string
 const (
 	ModuleProject     Module = "project"
 	ModuleApplication Module = "application"
+	ModuleCluster     Module = "cluster"
+	ModuleEnvironment Module = "environment"
 )
 
 type Options struct {
@@ -32,6 +34,8 @@ func NewRouter() *gin.Engine {
 		Modules: []Module{
 			ModuleProject,
 			ModuleApplication,
+			ModuleCluster,
+			ModuleEnvironment,
 		},
 	})
 }
@@ -104,6 +108,10 @@ func registerModules(api *gin.RouterGroup, opts Options) {
 			RegisterProjectRoutes(api)
 		case ModuleApplication:
 			RegisterApplicationRoutes(api)
+		case ModuleCluster:
+			RegisterClusterRoutes(api)
+		case ModuleEnvironment:
+			RegisterEnvironmentRoutes(api)
 		}
 	}
 }

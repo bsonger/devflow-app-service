@@ -1,20 +1,23 @@
 # DevFlow App Service
 
-`devflow-app-service` owns `Project` and `Application` metadata.
+`devflow-app-service` owns `Project`, `Application`, `Cluster`, and `Environment` metadata.
 
 ## Role
 
 - own `Project`
 - own `Application`
+- own `Cluster`
+- own `Environment`
 - maintain `Application.active_image` binding
-- provide application/project catalog queries for other services and the platform console
+- provide application/project/deploy-target catalog queries for other services and the platform console
 
 ## Current contract highlights
 
-- `Project.labels` and `Application.labels` now use ordered `[{ key, value }]`
+- `Project.labels`, `Application.labels`, `Cluster.labels`, and `Environment.labels` use ordered `[{ key, value }]`
 - responses include `created_at` and `updated_at`
-- `Application.active_image_id` remains the only app-service release-facing binding
-- environment-specific console views are **not** owned here
+- `Environment` uses `cluster_id` and does not expose a writable `namespace`
+- `Cluster` owns destination server and sensitive connection material such as `kubeconfig`
+- `Application.active_image_id` remains the only app-service release-facing binding outside the metadata CRUD surface
 
 ## Key Commands
 

@@ -16,6 +16,8 @@ func main() {
 			Modules: []router.Module{
 				router.ModuleProject,
 				router.ModuleApplication,
+				router.ModuleCluster,
+				router.ModuleEnvironment,
 			},
 		},
 		Load:        config.Load,

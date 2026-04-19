@@ -24,6 +24,58 @@ definitions:
       updated_at:
         type: string
     type: object
+  github_com_bsonger_devflow-app-service_pkg_domain.Cluster:
+    properties:
+      argocd_cluster_name:
+        type: string
+      created_at:
+        type: string
+      deleted_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      kubeconfig:
+        type: string
+      labels:
+        items:
+          $ref: '#/definitions/github_com_bsonger_devflow-app-service_pkg_domain.LabelItem'
+        type: array
+      name:
+        type: string
+      onboarding_checked_at:
+        type: string
+      onboarding_error:
+        type: string
+      onboarding_ready:
+        type: boolean
+      server:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  github_com_bsonger_devflow-app-service_pkg_domain.Environment:
+    properties:
+      cluster_id:
+        type: string
+      created_at:
+        type: string
+      deleted_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      labels:
+        items:
+          $ref: '#/definitions/github_com_bsonger_devflow-app-service_pkg_domain.LabelItem'
+        type: array
+      name:
+        type: string
+      updated_at:
+        type: string
+    type: object
   github_com_bsonger_devflow-app-service_pkg_domain.LabelItem:
     properties:
       key:
@@ -55,6 +107,16 @@ definitions:
       data:
         $ref: '#/definitions/github_com_bsonger_devflow-app-service_pkg_domain.Application'
     type: object
+  httpx.DataResponse-github_com_bsonger_devflow-app-service_pkg_domain_Cluster:
+    properties:
+      data:
+        $ref: '#/definitions/github_com_bsonger_devflow-app-service_pkg_domain.Cluster'
+    type: object
+  httpx.DataResponse-github_com_bsonger_devflow-app-service_pkg_domain_Environment:
+    properties:
+      data:
+        $ref: '#/definitions/github_com_bsonger_devflow-app-service_pkg_domain.Environment'
+    type: object
   httpx.DataResponse-github_com_bsonger_devflow-app-service_pkg_domain_Project:
     properties:
       data:
@@ -65,6 +127,24 @@ definitions:
       data:
         items:
           $ref: '#/definitions/github_com_bsonger_devflow-app-service_pkg_domain.Application'
+        type: array
+      pagination:
+        $ref: '#/definitions/httpx.Pagination'
+    type: object
+  httpx.ListResponse-github_com_bsonger_devflow-app-service_pkg_domain_Cluster:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/github_com_bsonger_devflow-app-service_pkg_domain.Cluster'
+        type: array
+      pagination:
+        $ref: '#/definitions/httpx.Pagination'
+    type: object
+  httpx.ListResponse-github_com_bsonger_devflow-app-service_pkg_domain_Environment:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/github_com_bsonger_devflow-app-service_pkg_domain.Environment'
         type: array
       pagination:
         $ref: '#/definitions/httpx.Pagination'
@@ -108,6 +188,43 @@ definitions:
       repo_address:
         type: string
     type: object
+  pkg_api.CreateClusterRequest:
+    properties:
+      argocd_cluster_name:
+        type: string
+      description:
+        type: string
+      kubeconfig:
+        type: string
+      labels:
+        items:
+          $ref: '#/definitions/github_com_bsonger_devflow-app-service_pkg_domain.LabelItem'
+        type: array
+      name:
+        type: string
+      server:
+        type: string
+    required:
+    - kubeconfig
+    - name
+    - server
+    type: object
+  pkg_api.CreateEnvironmentRequest:
+    properties:
+      cluster_id:
+        type: string
+      description:
+        type: string
+      labels:
+        items:
+          $ref: '#/definitions/github_com_bsonger_devflow-app-service_pkg_domain.LabelItem'
+        type: array
+      name:
+        type: string
+    required:
+    - cluster_id
+    - name
+    type: object
   pkg_api.CreateProjectRequest:
     properties:
       description:
@@ -142,6 +259,43 @@ definitions:
         type: string
       repo_address:
         type: string
+    type: object
+  pkg_api.UpdateClusterRequest:
+    properties:
+      argocd_cluster_name:
+        type: string
+      description:
+        type: string
+      kubeconfig:
+        type: string
+      labels:
+        items:
+          $ref: '#/definitions/github_com_bsonger_devflow-app-service_pkg_domain.LabelItem'
+        type: array
+      name:
+        type: string
+      server:
+        type: string
+    required:
+    - kubeconfig
+    - name
+    - server
+    type: object
+  pkg_api.UpdateEnvironmentRequest:
+    properties:
+      cluster_id:
+        type: string
+      description:
+        type: string
+      labels:
+        items:
+          $ref: '#/definitions/github_com_bsonger_devflow-app-service_pkg_domain.LabelItem'
+        type: array
+      name:
+        type: string
+    required:
+    - cluster_id
+    - name
     type: object
   pkg_api.UpdateProjectRequest:
     properties:
@@ -256,6 +410,164 @@ paths:
       summary: 更新应用的 Active Image
       tags:
       - Application
+  /api/v1/clusters:
+    get:
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/httpx.ListResponse-github_com_bsonger_devflow-app-service_pkg_domain_Cluster'
+      summary: 获取集群列表
+      tags:
+      - Cluster
+    post:
+      consumes:
+      - application/json
+      description: 创建一个新的集群
+      parameters:
+      - description: Cluster Data
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/pkg_api.CreateClusterRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/httpx.DataResponse-github_com_bsonger_devflow-app-service_pkg_domain_Cluster'
+      summary: 创建集群
+      tags:
+      - Cluster
+  /api/v1/clusters/{id}:
+    delete:
+      parameters:
+      - description: Cluster ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+      summary: 删除集群
+      tags:
+      - Cluster
+    get:
+      parameters:
+      - description: Cluster ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/httpx.DataResponse-github_com_bsonger_devflow-app-service_pkg_domain_Cluster'
+      summary: 获取集群
+      tags:
+      - Cluster
+    put:
+      parameters:
+      - description: Cluster ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Cluster Data
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/pkg_api.UpdateClusterRequest'
+      responses:
+        "204":
+          description: No Content
+      summary: 更新集群
+      tags:
+      - Cluster
+  /api/v1/environments:
+    get:
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/httpx.ListResponse-github_com_bsonger_devflow-app-service_pkg_domain_Environment'
+      summary: 获取环境列表
+      tags:
+      - Environment
+    post:
+      consumes:
+      - application/json
+      description: 创建一个新的环境
+      parameters:
+      - description: Environment Data
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/pkg_api.CreateEnvironmentRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/httpx.DataResponse-github_com_bsonger_devflow-app-service_pkg_domain_Environment'
+      summary: 创建环境
+      tags:
+      - Environment
+  /api/v1/environments/{id}:
+    delete:
+      parameters:
+      - description: Environment ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+      summary: 删除环境
+      tags:
+      - Environment
+    get:
+      parameters:
+      - description: Environment ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/httpx.DataResponse-github_com_bsonger_devflow-app-service_pkg_domain_Environment'
+      summary: 获取环境
+      tags:
+      - Environment
+    put:
+      parameters:
+      - description: Environment ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Environment Data
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/pkg_api.UpdateEnvironmentRequest'
+      responses:
+        "204":
+          description: No Content
+      summary: 更新环境
+      tags:
+      - Environment
   /api/v1/projects:
     get:
       responses:

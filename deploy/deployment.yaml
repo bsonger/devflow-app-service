@@ -13,6 +13,7 @@ spec:
       labels:
         app.kubernetes.io/name: devflow-app-service
     spec:
+      serviceAccountName: devflow-app-service
       imagePullSecrets:
         - name: aliyun-docker-config
       containers:
