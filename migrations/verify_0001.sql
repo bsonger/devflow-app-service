@@ -33,6 +33,13 @@ BEGIN
   IF NOT EXISTS (
     SELECT 1
     FROM information_schema.columns
+    WHERE table_name = 'environments' AND column_name = 'cluster_id'
+  ) THEN
+    RAISE EXCEPTION 'missing column: environments.cluster_id';
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1
+    FROM information_schema.columns
     WHERE table_name = 'environments' AND column_name = 'description'
   ) THEN
     RAISE EXCEPTION 'missing column: environments.description';
